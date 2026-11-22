@@ -104,6 +104,8 @@
             scenes.push(el);
         });
         fit(stage);
+        if (window.signoTick) window.signoTick();
+        if (window.signoWeather) window.signoWeather();
         sceneIndex = -1;
         if (!scenes.length) {
             overlay('Noch keine Inhalte', '', 'Fügen Sie unter <strong>' + HOST + '</strong> Seiten hinzu oder wählen Sie Seiten für diesen Bildschirm.');

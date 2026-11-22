@@ -40,6 +40,18 @@ class Starter
                 'image' => null,
                 'footer' => '',
             ],
+            'clock' => [
+                'heading' => 'Willkommen',
+                'text' => '',
+                'city' => 'Wien',
+                'weather' => true,
+            ],
+            'countdown' => [
+                'heading' => 'Große Eröffnung',
+                'text' => 'Wir freuen uns auf Sie!',
+                'target' => now()->addDays(10)->setTime(10, 0)->format('Y-m-d\TH:i'),
+                'done_text' => 'Jetzt geöffnet!',
+            ],
             'media' => [
                 'file' => null,
                 'mime' => null,

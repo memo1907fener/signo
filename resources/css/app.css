@@ -9,12 +9,12 @@
 @theme {
     --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
     --font-serif: 'Fraunces Variable', Georgia, serif;
-    --color-ink: #17140f;
-    --color-paper: #f7f4ef;
-    --color-sand: #ece6dc;
+    --color-ink: #121726;
+    --color-paper: #f4f6fb;
+    --color-sand: #e6eaf3;
     --color-brand: #ff5a36;
     --color-brand-dark: #e2421f;
-    --color-muted: #6e675d;
+    --color-muted: #5b6480;
 }
 
 @layer base {

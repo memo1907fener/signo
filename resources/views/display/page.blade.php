@@ -6,7 +6,7 @@
     $ordering = $ordering ?? false;
     $orderPrice = fn ($p) => $ordering ? \App\Models\Order::parsePrice($p) : null;
 @endphp
-<div class="sg-page sg-{{ $mode }} sg-theme-{{ $page->theme }} sg-font-{{ $page->font }} sg-t-{{ $page->template }}"
+<div class="sg-page sg-{{ $mode }} sg-theme-{{ $page->theme }} sg-font-{{ $page->font }} sg-t-{{ $page->template }} {{ ! empty($d['ticker']) && $mode === 'tv' ? 'sg-has-ticker' : '' }}"
      style="--accent: {{ $page->accentColor() }};" data-revision="{{ $page->revision() }}">
     <div class="sg-fit">
 
@@ -107,6 +107,28 @@
             @endif
         </div>
 
+    @elseif ($page->template === 'clock')
+        <div class="sg-clock">
+            @if (! empty($d['heading']))<p class="sg-clock-head">{{ $d['heading'] }}</p>@endif
+            <div class="sg-clock-time" data-clock>{{ now()->format('H:i') }}</div>
+            <div class="sg-clock-date" data-date="{{ $page->lang ?? 'de' }}">{{ now()->locale('de')->isoFormat('dddd, D. MMMM YYYY') }}</div>
+            @if (! empty($d['weather']) && ! empty($d['city']))
+                <div class="sg-weather" data-weather="{{ $d['city'] }}"><span class="sg-w-icon"></span><span class="sg-w-temp"></span><span class="sg-w-city">{{ $d['city'] }}</span></div>
+            @endif
+            @if (! empty($d['text']))<p class="sg-text">{{ $d['text'] }}</p>@endif
+        </div>
+
+    @elseif ($page->template === 'countdown')
+        <div class="sg-clock">
+            @if (! empty($d['heading']))<h1 class="sg-h1">{{ $d['heading'] }}</h1>@endif
+            <div class="sg-count" data-countdown="{{ $d['target'] ?? '' }}" data-done="{{ $d['done_text'] ?? '' }}">
+                @foreach (['d' => 'Tage', 'h' => 'Std.', 'm' => 'Min.', 's' => 'Sek.'] as $k => $lbl)
+                    <div class="sg-count-box"><span data-part="{{ $k }}">–</span><small>{{ $lbl }}</small></div>
+                @endforeach
+            </div>
+            @if (! empty($d['text']))<p class="sg-text">{{ $d['text'] }}</p>@endif
+        </div>
+
     @elseif ($page->template === 'orders')
         @php $tok = $page->organization?->kitchen_token; @endphp
         <div class="sg-media">
@@ -134,4 +156,7 @@
     @endif
 
     </div>
+    @if (! empty($d['ticker']) && $mode === 'tv')
+        <div class="sg-ticker"><div class="sg-ticker-track" style="--len: {{ max(20, mb_strlen($d['ticker'])) }}"><span>{{ $d['ticker'] }}</span><span aria-hidden="true">{{ $d['ticker'] }}</span></div></div>
+    @endif
 </div>

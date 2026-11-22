@@ -10,7 +10,7 @@ Der Kunde sieht nur drei Bereiche: **Inhalte**, **Bildschirme**, **Konto**.
 | Inhalte | Seiten anlegen (KI-Import aus Foto/PDF/Text oder leere Vorlage), bearbeiten, QR-Code |
 | Bildschirme | Fernseher per 6-stelligem Code verbinden, Seiten wählen, Anzeigedauer, Betriebszeiten |
 | Bestellungen | Bestellen per QR-Code, Küchenansicht, Abholanzeige (für Gastro sichtbar, sonst nach dem Einschalten) |
-| Konto | Paket wählen (Stripe), Rechnungen, Firmendaten, Passwort, Konto löschen |
+| Konto | Paket wählen (Stripe), Rechnungen, Standorte, Team einladen, Firmendaten, Passwort, Standort löschen |
 
 Weitere Funktionen im Seiten-Editor:
 
@@ -18,6 +18,9 @@ Weitere Funktionen im Seiten-Editor:
   zeigt die Änderungen als Vorschau, ein Klick übernimmt sie.
 - **Weitere Sprachen:** bis zu 6 von 16 Sprachen je Seite. Die Handy-Seite wählt die Sprache des Gastes
   automatisch, am Bildschirm können die Sprachen abwechseln. Geänderte Texte werden auf Knopfdruck nachübersetzt.
+- **Zeitplan:** Seite nur an bestimmten Tagen, Uhrzeiten oder in einem Zeitraum zeigen.
+- **Laufschrift** am unteren Bildschirmrand; neue Seitentypen **Uhr & Wetter** und **Countdown**.
+- **Texte vorschlagen** (KI) und **Fotobibliothek** (Pexels, Schlüssel `PEXELS_API_KEY` in der `.env`).
 - **Per Handy bestellbar:** Einträge mit Preis bekommen auf der Handy-Seite einen „+“-Knopf. Preise rechnet
   immer der Server aus den gespeicherten Daten. Bezahlt wird vor Ort.
 

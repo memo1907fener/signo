@@ -4,5 +4,5 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>{{ $title ? $title . ' · Signo' : 'Signo – Digitale Anzeigen in Minuten' }}</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<meta name="theme-color" content="#f7f4ef">
+<meta name="theme-color" content="#f4f6fb">
 @vite(['resources/css/app.css', 'resources/js/app.js'])

@@ -24,7 +24,25 @@ class User extends Authenticatable
         ];
     }
 
+    /** Aktuell gewählter Betrieb/Standort. */
     public function organization(): BelongsTo { return $this->belongsTo(Organization::class); }
+
+    /** Alle Betriebe/Standorte, auf die der Benutzer Zugriff hat. */
+    public function organizations(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Organization::class)->withPivot('role')->withTimestamps()->orderBy('name');
+    }
+
+    public function roleIn(?Organization $org): ?string
+    {
+        if (! $org) return null;
+        return $this->organizations()->where('organizations.id', $org->id)->first()?->pivot->role;
+    }
+
+    public function isOwnerOf(?Organization $org): bool
+    {
+        return $this->is_admin || $this->roleIn($org) === 'owner';
+    }
 
     public function sendPasswordResetNotification($token): void
     {

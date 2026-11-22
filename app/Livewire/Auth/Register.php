@@ -81,13 +81,15 @@ class Register extends Component
             ]);
             Starter::create($org);
 
-            return User::create([
+            $user = User::create([
                 'name' => $this->name,
                 'email' => $this->email,
                 'password' => $this->password,
                 'organization_id' => $org->id,
                 'is_admin' => in_array($this->email, array_map('strtolower', config('signo.admin_emails')), true),
             ]);
+            $org->users()->attach($user->id, ['role' => 'owner']);
+            return $user;
         });
 
         Auth::login($user, true);

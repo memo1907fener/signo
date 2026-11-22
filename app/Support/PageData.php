@@ -24,6 +24,7 @@ class PageData
                     ])->values()->all(),
                 ])->values()->all(),
                 'footer' => $s($d['footer'] ?? '', 300),
+                'ticker' => $s($d['ticker'] ?? '', 400),
             ],
             'offer' => [
                 'kicker' => $s($d['kicker'] ?? '', 60),
@@ -33,6 +34,7 @@ class PageData
                 'old_price' => $s($d['old_price'] ?? '', 40),
                 'image' => self::path($d['image'] ?? null),
                 'footer' => $s($d['footer'] ?? '', 300),
+                'ticker' => $s($d['ticker'] ?? '', 400),
             ],
             'info' => [
                 'heading' => $s($d['heading'] ?? '', 160),
@@ -43,6 +45,19 @@ class PageData
                 ])->values()->all(),
                 'image' => self::path($d['image'] ?? null),
                 'footer' => $s($d['footer'] ?? '', 300),
+                'ticker' => $s($d['ticker'] ?? '', 400),
+            ],
+            'clock' => [
+                'heading' => $s($d['heading'] ?? '', 120),
+                'text' => $s($d['text'] ?? '', 300),
+                'city' => $s($d['city'] ?? '', 80),
+                'weather' => (bool) ($d['weather'] ?? false),
+            ],
+            'countdown' => [
+                'heading' => $s($d['heading'] ?? '', 120),
+                'text' => $s($d['text'] ?? '', 300),
+                'target' => preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', (string) ($d['target'] ?? '')) ? $d['target'] : '',
+                'done_text' => $s($d['done_text'] ?? '', 120),
             ],
             'media' => [
                 'file' => self::path($d['file'] ?? null),

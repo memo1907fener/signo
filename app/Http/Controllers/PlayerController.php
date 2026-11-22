@@ -91,7 +91,8 @@ class PlayerController extends Controller
             return response()->json(['status' => 'sleeping', 'poll' => 30, 'commands' => $commands]);
         }
 
-        $pages = $screen->show_all ? $org->pages()->get() : $screen->pages()->where('organization_id', $org->id)->get();
+        $pages = ($screen->show_all ? $org->pages()->get() : $screen->pages()->where('organization_id', $org->id)->get())
+            ->filter(fn (Page $p) => $p->isActiveAt())->values();
 
         // Jede Seite; bei "Sprachen abwechseln" zusätzlich jede Übersetzung als eigene Szene
         $out = collect();

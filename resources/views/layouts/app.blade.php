@@ -22,6 +22,20 @@
 <header class="sticky top-0 z-30 border-b border-black/5 bg-paper/85 backdrop-blur">
     <div class="mx-auto flex h-16 max-w-6xl items-center gap-6 px-4 sm:px-6">
         <a href="{{ route('pages.index') }}" wire:navigate><x-logo /></a>
+        @php $locs = $user?->organizations()->get(['organizations.id', 'name']) ?? collect(); @endphp
+        @if ($locs->count() > 1)
+            <div x-data="{ o: false }" class="relative hidden md:block">
+                <button @click="o = !o" @click.outside="o = false" class="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-sm font-medium ring-1 ring-black/10">{{ \Illuminate\Support\Str::limit($org->name, 22) }} <span class="text-muted">▾</span></button>
+                <div x-show="o" x-cloak class="absolute left-0 z-40 mt-2 w-60 overflow-hidden rounded-2xl bg-white py-1 text-sm shadow-xl ring-1 ring-black/10">
+                    @foreach ($locs as $l)
+                        <form method="POST" action="{{ route('location.switch', $l->id) }}">@csrf
+                            <button class="block w-full px-4 py-2 text-left hover:bg-paper {{ $l->id === $org->id ? 'font-semibold' : '' }}">{{ $l->name }}</button>
+                        </form>
+                    @endforeach
+                    <a href="{{ route('account') }}" class="block border-t border-black/5 px-4 py-2 text-muted hover:bg-paper">Standorte verwalten</a>
+                </div>
+            </div>
+        @endif
         <nav class="flex flex-1 items-center gap-1 overflow-x-auto">
             @foreach ($nav as $n)
                 <a href="{{ route($n['route']) }}" wire:navigate
@@ -41,7 +55,7 @@
     <div class="bg-ink text-white">
         <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm sm:px-6">
             <span>Testphase: noch <strong>{{ $org->trialDaysLeft() }} {{ $org->trialDaysLeft() === 1 ? 'Tag' : 'Tage' }}</strong> kostenlos.</span>
-            <a href="{{ route('account') }}#paket" wire:navigate class="font-semibold text-brand hover:underline">Paket wählen →</a>
+            @if ($user->isOwnerOf($org))<a href="{{ route('account') }}#paket" wire:navigate class="font-semibold text-brand hover:underline">Paket wählen →</a>@endif
         </div>
     </div>
 @elseif ($org && ! $org->isActive())

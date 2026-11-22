@@ -54,10 +54,10 @@
                     </form>
                 @endif
             @else
-                <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach (collect(config('signo.templates'))->reject(fn ($t) => $t['hidden'] ?? false) as $key => $t)
                         <button wire:click="create('{{ $key }}')" class="rounded-3xl bg-paper p-5 text-left ring-1 ring-black/5 transition hover:ring-ink">
-                            <span class="block text-2xl">{{ ['list' => '📋', 'offer' => '🏷️', 'info' => 'ℹ️', 'media' => '🖼️'][$key] }}</span>
+                            <span class="block text-2xl">{{ ['list' => '📋', 'offer' => '🏷️', 'info' => 'ℹ️', 'media' => '🖼️', 'clock' => '🕒', 'countdown' => '⏳'][$key] ?? '✨' }}</span>
                             <span class="mt-3 block font-semibold">{{ $t['label'] }}</span>
                             <span class="mt-0.5 block text-sm text-muted">{{ $t['hint'] }}</span>
                         </button>
@@ -85,6 +85,9 @@
                         <div class="min-w-0 flex-1">
                             <a href="{{ route('pages.edit', $p) }}" wire:navigate class="block truncate font-semibold hover:underline">{{ $p->title }}</a>
                             <p class="text-xs text-muted">{{ $p->templateLabel() }} · {{ $p->theme === 'dark' ? 'Dunkel' : 'Hell' }}</p>
+                            @if ($label = $p->scheduleLabel())
+                                <p class="mt-1 text-xs"><span class="chip {{ $p->isActiveAt() ? 'bg-green-100 text-green-800' : 'bg-black/5 text-muted' }}">🕒 {{ $label }}{{ $p->isActiveAt() ? ' · läuft' : ' · pausiert' }}</span></p>
+                            @endif
                         </div>
                         <button wire:click="$set('qrPage', {{ $p->id }})" class="btn-ghost btn-sm" title="QR-Code">QR</button>
                         <div x-data="{ open: false }" class="relative">

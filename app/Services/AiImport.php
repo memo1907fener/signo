@@ -34,12 +34,12 @@ class AiImport
     /**
      * Allgemeine KI-Anfrage mit strukturierter Antwort (zählt zum Tageslimit).
      */
-    public static function request(Organization $org, array $content, array $schema, int $maxTokens = 8000): array
+    public static function request(Organization $org, array $content, array $schema, int $maxTokens = 8000, bool $count = true): array
     {
         if (! self::available()) {
             throw new RuntimeException('Die KI ist noch nicht eingerichtet.');
         }
-        if (self::remainingToday($org) <= 0) {
+        if ($count && self::remainingToday($org) <= 0) {
             throw new RuntimeException('Das Tageslimit für KI-Funktionen ist erreicht. Morgen geht es wieder.');
         }
 
@@ -66,7 +66,7 @@ class AiImport
             });
         }
 
-        Cache::put(self::counterKey($org), (int) Cache::get(self::counterKey($org), 0) + 1, now()->endOfDay());
+        if ($count) Cache::put(self::counterKey($org), (int) Cache::get(self::counterKey($org), 0) + 1, now()->endOfDay());
 
         if ($res->json('stop_reason') === 'max_tokens') {
             throw new RuntimeException('Der Inhalt ist sehr umfangreich. Bitte in kleineren Teilen versuchen.');
@@ -81,14 +81,14 @@ class AiImport
     /**
      * @return array{template:string,title:string,data:array}
      */
-    public static function run(Organization $org, ?UploadedFile $file, string $text): array
+    public static function run(Organization $org, ?UploadedFile $file, string $text, bool $count = true): array
     {
         $content = [];
         if ($file) $content[] = self::fileBlock($file);
         $content[] = ['type' => 'text', 'text' => self::prompt($org->industryLabel(), $text)];
 
         try {
-            $out = self::request($org, $content, self::schema(), 16000);
+            $out = self::request($org, $content, self::schema(), 16000, $count);
         } catch (RuntimeException $e) {
             if (str_contains($e->getMessage(), 'sehr umfangreich')) {
                 throw new RuntimeException('Die Vorlage ist sehr umfangreich. Bitte in zwei Teilen hochladen (z. B. Speisen und Getränke getrennt).');

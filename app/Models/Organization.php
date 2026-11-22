@@ -23,7 +23,31 @@ class Organization extends Model
         ];
     }
 
-    public function users(): HasMany { return $this->hasMany(User::class); }
+    public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class)->withPivot('role')->withTimestamps();
+    }
+
+    public function owners() { return $this->users()->wherePivot('role', 'owner'); }
+    public function invitations(): HasMany { return $this->hasMany(Invitation::class); }
+
+    /** Betrieb samt Inhalten löschen; Benutzer ohne weiteren Betrieb werden mitgelöscht. */
+    public function deleteCompletely(): void
+    {
+        \Illuminate\Support\Facades\Storage::disk('public')->deleteDirectory('org/' . $this->id);
+        $members = $this->users()->get();
+        $this->screens()->delete();
+        $this->users()->detach();
+        foreach ($members as $u) {
+            $other = $u->organizations()->first();
+            if ($other) {
+                if ($u->organization_id === $this->id) $u->forceFill(['organization_id' => $other->id])->save();
+            } else {
+                $u->delete();
+            }
+        }
+        $this->delete();
+    }
     public function pages(): HasMany { return $this->hasMany(Page::class)->orderBy('position')->orderBy('id'); }
     public function orders(): HasMany { return $this->hasMany(Order::class); }
     public function screens(): HasMany { return $this->hasMany(Screen::class)->orderBy('name'); }

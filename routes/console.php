@@ -25,7 +25,7 @@ Artisan::command('signo:trial-reminders', function () {
         ->whereNotNull('trial_ends_at')->where('reminder_stage', '<', 2)->get();
 
     foreach ($orgs as $org) {
-        $user = $org->users->first();
+        $user = $org->owners()->first() ?? $org->users->first();
         if (! $user) continue;
         $stage = null;
         if ($org->reminder_stage < 1 && $org->trial_ends_at->isFuture() && $org->trial_ends_at->lte(now()->addDays(3))) $stage = 1;

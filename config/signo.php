@@ -36,6 +36,8 @@ return [
         'offer' => ['label' => 'Angebot',           'hint' => 'Tagesangebot, Aktion, Neuheit'],
         'info'  => ['label' => 'Information',        'hint' => 'Willkommen, Öffnungszeiten, Hinweis'],
         'media' => ['label' => 'Bild oder Video',    'hint' => 'Plakat, Foto, Werbespot'],
+        'clock' => ['label' => 'Uhr & Wetter',       'hint' => 'Große Uhr, Datum und Wetter vor Ort'],
+        'countdown' => ['label' => 'Countdown',      'hint' => 'Eröffnung, Silvester, Aktionsende'],
         'orders' => ['label' => 'Abholanzeige',      'hint' => 'Bestellnummern für Gäste', 'hidden' => true],
     ],
 
@@ -90,6 +92,9 @@ return [
         'effort' => env('ANTHROPIC_EFFORT', 'low'),
         'daily_limit' => (int) env('SIGNO_AI_DAILY_LIMIT', 20),
     ],
+
+    // Fotobibliothek (kostenloser Schlüssel: https://www.pexels.com/api/)
+    'pexels' => env('PEXELS_API_KEY'),
 
     'stripe' => [
         'secret'  => env('STRIPE_SECRET'),

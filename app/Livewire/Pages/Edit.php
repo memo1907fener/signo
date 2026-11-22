@@ -5,6 +5,7 @@ namespace App\Livewire\Pages;
 use App\Livewire\Concerns\WithOrg;
 use App\Models\Page;
 use App\Services\AiImport;
+use App\Services\Creative;
 use App\Services\VoiceEdit;
 use App\Support\PageData;
 use App\Support\Translations;
@@ -39,6 +40,18 @@ class Edit extends Component
 
     public string $previewLang = 'de';
 
+    // Gestaltungshilfe
+    public string $idea = '';
+    public array $ideas = [];
+    public ?string $ideaError = null;
+    public bool $photoOpen = false;
+    public string $photoQuery = '';
+    public array $photos = [];
+    public ?string $photoError = null;
+
+    // Zeitplan
+    public array $schedule = ['enabled' => false, 'from' => '', 'until' => '', 'days' => [1, 2, 3, 4, 5, 6, 7], 'start' => '', 'end' => ''];
+
     // Bestellen
     public bool $orderable = false;
 
@@ -60,6 +73,7 @@ class Edit extends Component
         $this->languages = $page->languages ?? [];
         $this->tvLanguages = $page->tv_languages;
         $this->orderable = $page->orderable;
+        $this->schedule = array_merge($this->schedule, $page->schedule ?? []);
     }
 
     protected function page(): Page
@@ -70,7 +84,7 @@ class Edit extends Component
     /** Jede Änderung wird sofort gespeichert. */
     public function updated($name): void
     {
-        if (in_array($name, ['image', 'voiceText', 'previewLang'], true)) return;
+        if (in_array($name, ['image', 'voiceText', 'previewLang', 'idea', 'photoQuery', 'photoOpen'], true)) return;
         $this->persist();
     }
 
@@ -88,10 +102,91 @@ class Edit extends Component
             'font' => $this->font,
             'is_public' => $this->isPublic,
             'tv_languages' => $this->tvLanguages,
+            'schedule' => $this->cleanSchedule(),
             'orderable' => $this->orderable && $page->template === 'list',
             'data' => PageData::clean($page->template, $this->data),
         ]);
         $this->savedAt = now()->format('H:i:s');
+    }
+
+    protected function cleanSchedule(): ?array
+    {
+        $s = $this->schedule;
+        $date = fn ($v) => is_string($v) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) ? $v : null;
+        $time = fn ($v) => is_string($v) && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $v) ? $v : null;
+        $days = array_values(array_unique(array_filter(array_map('intval', (array) ($s['days'] ?? [])), fn ($d) => $d >= 1 && $d <= 7)));
+        sort($days);
+        return [
+            'enabled' => (bool) ($s['enabled'] ?? false),
+            'from' => $date($s['from'] ?? null),
+            'until' => $date($s['until'] ?? null),
+            'days' => $days ?: [1, 2, 3, 4, 5, 6, 7],
+            'start' => $time($s['start'] ?? null),
+            'end' => $time($s['end'] ?? null),
+        ];
+    }
+
+    // ---------- Gestaltungshilfe ----------
+    public function suggest(): void
+    {
+        $this->ideaError = null; $this->ideas = [];
+        try {
+            $this->ideas = Creative::ideas($this->org(), $this->page()->template, $this->idea);
+        } catch (\Throwable $e) {
+            report($e);
+            $this->ideaError = $e instanceof \RuntimeException ? $e->getMessage() : 'Das hat nicht geklappt.';
+        }
+    }
+
+    public function useIdea(int $i): void
+    {
+        $idea = $this->ideas[$i] ?? null;
+        if (! $idea) return;
+        foreach (['kicker', 'heading', 'text'] as $k) {
+            if (array_key_exists($k, $this->data) && isset($idea[$k])) $this->data[$k] = $idea[$k];
+        }
+        $this->photoQuery = (string) ($idea['photo_search'] ?? '');
+        $this->ideas = [];
+        $this->persist();
+    }
+
+    public function openPhotos(): void
+    {
+        $this->photoOpen = true;
+        if ($this->photoQuery === '') $this->photoQuery = (string) ($this->data['heading'] ?? '');
+        $this->searchPhotos();
+    }
+
+    public function searchPhotos(): void
+    {
+        $this->photoError = null;
+        try {
+            $this->photos = Creative::searchPhotos($this->photoQuery);
+            if (! $this->photos) $this->photoError = 'Keine Fotos gefunden. Andere Suchbegriffe probieren (Englisch funktioniert oft besser).';
+        } catch (\Throwable $e) {
+            report($e);
+            $this->photoError = $e instanceof \RuntimeException ? $e->getMessage() : 'Die Bildsuche ist gerade nicht erreichbar.';
+        }
+    }
+
+    public function pickPhoto(int $i): void
+    {
+        $p = $this->photos[$i] ?? null;
+        if (! $p) return;
+        try {
+            $path = Creative::importPhoto($this->org(), $p['full']);
+        } catch (\Throwable $e) {
+            report($e);
+            $this->photoError = $e instanceof \RuntimeException ? $e->getMessage() : 'Das Foto konnte nicht geladen werden.';
+            return;
+        }
+        $key = $this->page()->template === 'media' ? 'file' : 'image';
+        $this->deleteFile($this->data[$key] ?? null);
+        $this->data[$key] = $path;
+        if ($key === 'file') $this->data['mime'] = 'image/jpeg';
+        $this->photoOpen = false;
+        $this->photos = [];
+        $this->persist();
     }
 
     // ---------- Sprachen ----------
@@ -273,6 +368,7 @@ class Edit extends Component
         return view('livewire.pages.edit', [
             'page' => $page, 'preview' => $preview, 'org' => $org,
             'aiReady' => AiImport::available(),
+            'photosReady' => Creative::photosAvailable(),
             'missing' => $page->languages ? Translations::missingCount($page) : 0,
         ])
             ->title($this->title);

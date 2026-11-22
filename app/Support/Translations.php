@@ -40,7 +40,7 @@ class Translations
             $v = Arr::get($d, $path);
             if (is_string($v) && trim($v) !== '' && preg_match('/\p{L}/u', $v)) $out[$path] = $v;
         };
-        foreach (['heading', 'subheading', 'kicker', 'text', 'footer', 'caption'] as $k) $add($k);
+        foreach (['heading', 'subheading', 'kicker', 'text', 'footer', 'caption', 'ticker', 'done_text'] as $k) $add($k);
         foreach (($d['sections'] ?? []) as $s => $sec) {
             $add("sections.$s.title");
             foreach (($sec['items'] ?? []) as $i => $_) {

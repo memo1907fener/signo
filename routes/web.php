@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Route;
 
 // ---------- Öffentliche Website ----------
 Route::get('/', [SiteController::class, 'home'])->name('home');
+Route::post('/demo', [\App\Http\Controllers\DemoController::class, 'render'])->middleware('throttle:90,1')->name('demo');
+Route::post('/demo/foto', [\App\Http\Controllers\DemoController::class, 'photo'])->middleware('throttle:6,1')->name('demo.photo');
 Route::get('/rechtliches/{doc}', [SiteController::class, 'legal'])->whereIn('doc', ['impressum', 'datenschutz', 'agb'])->name('legal');
 Route::redirect('/impressum', '/rechtliches/impressum');
 Route::redirect('/datenschutz', '/rechtliches/datenschutz');
@@ -27,6 +29,8 @@ Route::get('/bestellung/{code}/status', [OrderController::class, 'statusJson'])-
 Route::get('/abholung/{token}', [OrderController::class, 'board'])->name('board');
 Route::get('/abholung/{token}/status', [OrderController::class, 'boardJson'])->middleware('throttle:60,1')->name('board.json');
 Route::livewire('/kueche/{token}', Livewire\Orders::class)->name('kitchen');
+
+Route::get('/api/weather', \App\Http\Controllers\WeatherController::class)->middleware('throttle:60,1');
 
 // ---------- Bildschirm ----------
 Route::get('/tv', [PlayerController::class, 'show'])->name('player');
@@ -57,6 +61,7 @@ Route::middleware('guest')->group(function () {
     Route::livewire('/passwort-vergessen', Livewire\Auth\ForgotPassword::class)->name('password.request');
     Route::livewire('/passwort-neu/{token}', Livewire\Auth\ResetPassword::class)->name('password.reset');
 });
+Route::livewire('/einladung/{token}', Livewire\Auth\AcceptInvitation::class)->name('invitation');
 Route::redirect('/register', '/registrieren');
 Route::redirect('/login', '/anmelden');
 
@@ -78,4 +83,9 @@ Route::middleware(['auth', 'org'])->group(function () {
     Route::livewire('/bestellungen', Livewire\Orders::class)->name('orders');
     Route::livewire('/konto', Livewire\Account::class)->name('account');
     Route::livewire('/admin', Livewire\Admin\Organizations::class)->name('admin');
+    Route::post('/standort/{id}', function (Request $request, int $id) {
+        $org = $request->user()->organizations()->where('organizations.id', $id)->firstOrFail();
+        $request->user()->forceFill(['organization_id' => $org->id])->save();
+        return redirect()->route('pages.index');
+    })->name('location.switch');
 });

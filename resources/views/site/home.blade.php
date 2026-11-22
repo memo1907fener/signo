@@ -1,219 +1,291 @@
+@php
+    $plans = config('signo.plans');
+    $euro = fn ($c) => number_format($c / 100, 0, ',', '.') . ' €';
+    $tvHost = str_replace(['https://', 'http://'], '', url('/tv'));
+@endphp
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <x-head />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Signo – Vom Foto zum Bildschirm</title>
+    <meta name="description" content="Speisekarte, Preisliste oder Angebot fotografieren – Signo macht daraus in Minuten eine Anzeige für Ihren Fernseher, eine Handy-Seite mit QR-Code und auf Wunsch Bestellungen per Handy. 14 Tage kostenlos.">
+    <meta name="theme-color" content="#0f1631">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    @vite(['resources/css/site.css', 'resources/js/site.js'])
     @livewireStyles
-    <meta name="description" content="Foto der Speisekarte oder Preisliste hochladen – Signo macht daraus in Minuten eine Anzeige für Ihren Bildschirm und einen QR-Code fürs Handy. 14 Tage kostenlos.">
 </head>
-<body class="font-sans">
+<body class="site">
 
-<header class="sticky top-0 z-30 bg-paper/85 backdrop-blur">
-    <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <a href="/"><x-logo /></a>
-        <nav class="hidden items-center gap-7 text-sm font-medium text-ink/70 md:flex">
-            <a href="#so-gehts" class="hover:text-ink">So geht's</a>
-            <a href="#branchen" class="hover:text-ink">Branchen</a>
-            <a href="#preise" class="hover:text-ink">Preise</a>
-            <a href="#fragen" class="hover:text-ink">Fragen</a>
+<header class="top">
+    <div class="wrap">
+        <a href="/" class="logo" aria-label="Signo Startseite">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#ff5a36"/><rect x="7" y="9" width="18" height="12" rx="2.5" fill="none" stroke="#fff" stroke-width="2.4"/><circle cx="16" cy="25" r="2" fill="#fff"/></svg>
+            signo
+        </a>
+        <nav aria-label="Hauptnavigation">
+            <a href="#ausprobieren">Ausprobieren</a>
+            <a href="#branchen">Branchen</a>
+            <a href="#funktionen">Funktionen</a>
+            <a href="#preise">Preise</a>
+            <a href="#fragen">Fragen</a>
         </nav>
-        <div class="flex items-center gap-2">
-            @auth
-                <a href="{{ route('pages.index') }}" class="btn-primary">Zu meinen Inhalten</a>
-            @else
-                <a href="{{ route('login') }}" class="btn hidden text-ink/70 hover:text-ink sm:inline-flex">Anmelden</a>
-                <a href="{{ route('register') }}" class="btn-brand">Kostenlos testen</a>
-            @endauth
-        </div>
+        @auth
+            <a href="{{ route('pages.index') }}" class="b b-signal">Zu meinen Inhalten</a>
+        @else
+            <a href="{{ route('login') }}" class="login" style="text-decoration:none;opacity:.8">Anmelden</a>
+            <a href="{{ route('register') }}" class="b b-signal">Kostenlos testen</a>
+        @endauth
     </div>
 </header>
 
-{{-- Hero --}}
-<section class="mx-auto grid max-w-6xl items-center gap-12 px-4 pb-20 pt-12 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:pt-20">
-    <div>
-        <span class="chip bg-white text-ink ring-1 ring-black/10">✨ Mit KI – ohne Grafikkenntnisse</span>
-        <h1 class="mt-5 text-[2.6rem] font-extrabold leading-[1.02] tracking-tight sm:text-6xl">
-            Vom Foto zum Bildschirm in <span class="text-brand">zwei Minuten</span>.
-        </h1>
-        <p class="mt-6 max-w-xl text-lg text-ink/70">
-            Fotografieren Sie Ihre Speisekarte, Preisliste oder Ihr Angebot. Signo macht daraus eine schöne Anzeige für Ihren Fernseher – und einen QR-Code fürs Handy gleich dazu.
-        </p>
-        <div class="mt-8 flex flex-wrap gap-3">
-            <a href="{{ route('register') }}" class="btn-brand px-7 py-3.5 text-base">{{ config('signo.trial_days') }} Tage kostenlos testen</a>
-            <a href="#so-gehts" class="btn-ghost px-7 py-3.5 text-base">So funktioniert's</a>
+{{-- ===== Hero ===== --}}
+<section class="hero">
+    <div class="wrap hero-grid">
+        <div>
+            <h1 class="d1">Vom Foto zum Bildschirm.</h1>
+            <p class="lead">Fotografieren Sie Ihre Speisekarte, Preisliste oder Ihr Angebot. Signo macht daraus in zwei Minuten eine Anzeige für den Fernseher im Geschäft – und eine Handy-Seite mit QR-Code gleich dazu.</p>
+            <div class="ctas">
+                <a href="{{ route('register') }}" class="b b-signal">{{ config('signo.trial_days') }} Tage kostenlos testen</a>
+                <a href="#ausprobieren" class="b b-quiet">Jetzt ohne Anmeldung ausprobieren</a>
+            </div>
+            <p class="fine">Keine Kreditkarte. Kein Gerätekauf. Endet automatisch.</p>
         </div>
-        <p class="mt-4 text-sm text-muted">Keine Kreditkarte · Keine Installation · Endet automatisch</p>
-    </div>
 
-    <div x-data="{ i: 0, n: {{ $demo->count() }} }" x-init="setInterval(() => i = (i + 1) % n, 3800)">
-        <div class="relative rounded-[1.6rem] bg-ink p-2.5 shadow-2xl shadow-black/25 sm:p-3">
-            <div class="relative aspect-video overflow-hidden rounded-xl">
-                @foreach ($demo as $k => $p)
-                    <div class="sg-stage absolute inset-0 transition-opacity duration-700" :class="i === {{ $k }} ? 'opacity-100' : 'opacity-0'">
-                        @include('display.page', ['page' => $p, 'mode' => 'tv'])
+        <div class="stage" x-data="signoHero({{ count($heroPages) }})" aria-label="Beispiel: ein Fernseher zeigt eine Speisekarte, daneben die Handy-Ansicht">
+            <div class="tv3d">
+                <div class="tv">
+                    <div class="tv-screen">
+                        @foreach ($heroPages as $k => $p)
+                            <div class="sg-stage" :class="{ on: i === {{ $k }} }" @class(['on' => $k === 0])>
+                                @include('display.page', ['page' => $p, 'mode' => 'tv'])
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
+                </div>
+                <div class="tv-foot"></div>
+            </div>
+            <div class="paper" aria-hidden="true">
+                <b>Speisekarte</b>
+                <i><span>Frittatensuppe</span><span>4,90</span></i>
+                <i><span>Wiener Schnitzel</span><span>18,90</span></i>
+                <i><span>Käsespätzle</span><span>12,50</span></i>
+                <i><span>Kaiserschmarrn</span><span>8,90</span></i>
+            </div>
+            <div class="phone" aria-hidden="true">
+                <div class="phone-notch"></div>
+                <div class="phone-screen"><div class="phone-scale">@include('display.page', ['page' => $heroPages[0], 'mode' => 'mobile'])</div></div>
             </div>
         </div>
-        <div class="mx-auto h-6 w-28 bg-gradient-to-b from-ink/80 to-ink/40" style="clip-path: polygon(20% 0, 80% 0, 100% 100%, 0 100%)"></div>
-        <div class="mt-5 flex justify-center gap-2">
-            @foreach ($demo as $k => $p)
-                <button @click="i = {{ $k }}" class="h-2 rounded-full transition-all" :class="i === {{ $k }} ? 'w-6 bg-ink' : 'w-2 bg-ink/20'" aria-label="Beispiel {{ $k + 1 }}"></button>
-            @endforeach
-        </div>
     </div>
 </section>
 
-{{-- So geht's --}}
-<section id="so-gehts" class="bg-white py-20">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6">
-        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">So einfach geht's</h2>
-        <p class="mt-2 text-lg text-muted">Drei Schritte. Kein Handbuch.</p>
-        <div class="mt-12 grid gap-6 md:grid-cols-3">
-            @foreach ([
-                ['📷', 'Foto hochladen', 'Speisekarte, Preisliste, Plakat oder einfach Text – als Foto, PDF oder getippt.'],
-                ['✨', 'Signo gestaltet', 'Die KI überträgt alle Einträge und Preise in eine fertige Vorlage. Hell oder dunkel, mit Ihrer Farbe.'],
-                ['📺', 'Am Bildschirm zeigen', 'Fernseher verbinden, Code eingeben – fertig. Änderungen erscheinen in Sekunden, auch vom Handy aus.'],
-            ] as $n => [$icon, $title, $text])
-                <div class="rounded-3xl bg-paper p-7">
-                    <div class="flex items-center justify-between">
-                        <span class="text-3xl">{{ $icon }}</span>
-                        <span class="text-sm font-bold text-ink/25">0{{ $n + 1 }}</span>
+{{-- ===== Live-Demo ===== --}}
+<section class="sec demo" id="ausprobieren">
+    <div class="wrap">
+        <div class="sec-head">
+            <h2 class="d2">Probieren Sie es gleich hier.</h2>
+            <p class="lead muted">Tippen Sie Ihre Karte so, wie sie Ihnen einfällt – ein Eintrag pro Zeile, Preis ans Ende. Rechts sehen Sie sofort, wie es am Fernseher und am Handy aussieht.</p>
+        </div>
+        <div class="demo-grid" x-data="signoDemo(@js($demoText))">
+            <div class="demo-editor">
+                <label for="demo-text" class="sr">Ihre Karte</label>
+                <textarea id="demo-text" x-model="text" spellcheck="false"></textarea>
+                <div class="demo-tools">
+                    <div class="seg" role="group" aria-label="Hell oder dunkel">
+                        <button type="button" @click="theme = 'light'" :aria-pressed="theme === 'light'">Hell</button>
+                        <button type="button" @click="theme = 'dark'" :aria-pressed="theme === 'dark'">Dunkel</button>
                     </div>
-                    <h3 class="mt-6 text-xl font-bold">{{ $title }}</h3>
-                    <p class="mt-2 text-ink/70">{{ $text }}</p>
-                </div>
-            @endforeach
-        </div>
-    </div>
-</section>
-
-{{-- Branchen --}}
-<section id="branchen" class="py-20">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6">
-        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Passt zu Ihrem Betrieb</h2>
-        <p class="mt-2 text-lg text-muted">Mit fertigen Beispielseiten für Ihre Branche – Sie ändern nur noch Texte und Preise.</p>
-        <div class="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3">
-            @php
-                $examples = [
-                    'gastro' => 'Speisekarte, Mittagsmenü, Tagesangebot',
-                    'beauty' => 'Preisliste, Aktionen, Öffnungszeiten',
-                    'retail' => 'Angebot der Woche, Neuheiten, Service',
-                    'health' => 'Willkommen, Ordinationszeiten, Leistungen',
-                    'office' => 'Empfang, Tagesprogramm, WLAN-Info',
-                    'other'  => 'Alles, was Ihre Kunden sehen sollen',
-                ];
-            @endphp
-            @foreach (config('signo.industries') as $key => $ind)
-                <a href="{{ route('register', ['branche' => $key]) }}" class="group rounded-3xl bg-white p-6 ring-1 ring-black/5 transition hover:-translate-y-0.5 hover:shadow-lg">
-                    <span class="text-3xl">{{ $ind['icon'] }}</span>
-                    <h3 class="mt-4 font-bold">{{ $ind['label'] }}</h3>
-                    <p class="mt-1 text-sm text-muted">{{ $examples[$key] }}</p>
-                    <span class="mt-4 inline-block text-sm font-semibold text-brand opacity-0 transition group-hover:opacity-100">Jetzt testen →</span>
-                </a>
-            @endforeach
-        </div>
-    </div>
-</section>
-
-{{-- Vorteile --}}
-<section class="bg-ink py-20 text-white">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6">
-        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Alles drin. Nichts zu viel.</h2>
-        <p class="mt-2 text-lg text-white/60">Alle Funktionen sind in jedem Paket enthalten.</p>
-        <div class="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-            @foreach ([
-                ['Ändern per Sprache', '„Schnitzel kostet jetzt 19,90“ – ins Handy sagen, Vorschau prüfen, fertig. Kein Tippen in Formularen.'],
-                ['16 Sprachen automatisch', 'Gäste sehen Ihre Karte in ihrer Sprache. Am Bildschirm wechseln die Sprachen auf Wunsch ab.'],
-                ['Bestellen per QR-Code', 'Gäste bestellen am Handy, die Küche sieht es sofort am Tablet. Die Abholnummern erscheinen am Bildschirm.'],
-                ['Hell & dunkel', 'Jede Seite als helle oder dunkle Variante, mit Ihrer Akzentfarbe und passender Schrift.'],
-                ['QR-Code inklusive', 'Jede Seite gibt es auch fürs Handy. QR-Code ausdrucken, auf den Tisch stellen – immer aktuell.'],
-                ['Passt immer', 'Viel Text? Die Schrift passt sich automatisch an, damit alles auf den Bildschirm passt. Auch im Hochformat.'],
-                ['Läuft auch offline', 'Fällt das Internet aus, zeigt der Bildschirm einfach den letzten Stand weiter.'],
-                ['Feste Betriebszeiten', 'Morgens an, abends schwarz – ganz automatisch. Spart Strom und schont das Gerät.'],
-                ['Jeder Fernseher', 'Smart-TV mit Browser, günstige Android-TV-Box oder unsere App. Ohne Vertrag, ohne Techniker.'],
-            ] as [$t, $d])
-                <div>
-                    <div class="h-1 w-10 rounded-full bg-brand"></div>
-                    <h3 class="mt-4 text-lg font-bold">{{ $t }}</h3>
-                    <p class="mt-2 text-white/65">{{ $d }}</p>
-                </div>
-            @endforeach
-        </div>
-    </div>
-</section>
-
-{{-- Preise --}}
-<section id="preise" class="py-20">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6">
-        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Faire Preise</h2>
-        <p class="mt-2 text-lg text-muted">{{ config('signo.trial_days') }} Tage alles kostenlos testen. Danach monatlich kündbar.</p>
-        <div class="mt-10 grid gap-5 md:grid-cols-3">
-            @foreach (config('signo.plans') as $key => $p)
-                @php $hl = $key === 'screen'; @endphp
-                <div class="relative flex flex-col rounded-3xl p-7 {{ $hl ? 'bg-ink text-white shadow-xl' : 'bg-white ring-1 ring-black/5' }}">
-                    @if ($hl)<span class="chip absolute -top-3 left-7 bg-brand text-white">Am beliebtesten</span>@endif
-                    <h3 class="font-bold">{{ $p['name'] }}</h3>
-                    <p class="mt-4"><span class="text-4xl font-extrabold tracking-tight">{{ number_format($p['price'] / 100, 0, ',', '.') }} €</span>
-                        <span class="{{ $hl ? 'text-white/60' : 'text-muted' }}">/ {{ $p['interval'] === 'year' ? 'Jahr' : 'Monat' }}</span></p>
-                    <ul class="mt-6 flex-1 space-y-2.5 text-sm">
-                        @foreach ($p['features'] as $f)
-                            <li class="flex gap-2"><span class="text-brand">✓</span><span>{{ $f }}</span></li>
+                    <div class="seg" role="group" aria-label="Schrift">
+                        <button type="button" @click="font = 'modern'" :aria-pressed="font === 'modern'">Modern</button>
+                        <button type="button" @click="font = 'elegant'" :aria-pressed="font === 'elegant'" style="font-family:'Fraunces Variable',Georgia,serif">Elegant</button>
+                    </div>
+                    <div class="dots" role="group" aria-label="Farbe">
+                        @foreach (config('signo.accents') as $key => $hex)
+                            <button type="button" @click="accent = '{{ $key }}'" :aria-pressed="accent === '{{ $key }}'" style="background: {{ $hex }}" aria-label="Farbe {{ $key }}"></button>
                         @endforeach
-                    </ul>
-                    <a href="{{ route('register') }}" class="mt-7 {{ $hl ? 'btn-brand' : 'btn-primary' }} py-3">Kostenlos testen</a>
+                    </div>
                 </div>
+                @if ($aiDemo)
+                    <p style="margin-top:18px">
+                        <label class="b b-quiet photo-btn" :style="busy && 'opacity:.6'">
+                            <input type="file" accept="image/*,application/pdf" class="sr" @change="photo($event)" :disabled="busy">
+                            <span x-text="busy ? 'Die KI liest Ihre Karte …' : 'Oder Foto Ihrer Karte hochladen'"></span>
+                        </label>
+                    </p>
+                @endif
+                <p x-show="error" x-text="error" style="color:#c2311a;margin-top:10px" x-cloak></p>
+            </div>
+            <div class="demo-out" data-reveal>
+                <div class="tv"><div class="tv-screen"><div class="sg-stage on" x-ref="tv"></div></div></div>
+                <div class="phone demo-phone" style="transform:none">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen"><div class="phone-scale" x-ref="phone"></div></div>
+                </div>
+                <p class="demo-hint">Gefällt es Ihnen? <a href="{{ route('register') }}" style="font-weight:600;color:var(--signal)">Konto anlegen</a> – Ihre Karte ist in zwei Minuten auf Ihrem Fernseher.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- ===== Branchen ===== --}}
+<section class="sec ind" id="branchen" x-data="signoIndustries('gastro')">
+    <div class="wrap">
+        <div class="sec-head">
+            <h2 class="d2">Fertige Seiten für Ihre Branche.</h2>
+            <p class="lead muted">Nach der Anmeldung warten diese Beispiele schon auf Sie. Sie ändern nur Texte und Preise.</p>
+        </div>
+        <div class="tabs" role="tablist">
+            @foreach ($industries as $key => $ind)
+                <button type="button" role="tab" @click="pick('{{ $key }}')" :aria-selected="ind === '{{ $key }}'">{{ $ind['icon'] }} {{ $ind['label'] }}</button>
             @endforeach
         </div>
-        <p class="mt-6 text-sm text-muted">Alle Preise inkl. USt. Bezahlung per Karte, SEPA-Lastschrift, Apple Pay oder Google Pay.</p>
+        @foreach ($industries as $key => $ind)
+            <div class="ind-stage" x-show="ind === '{{ $key }}'" @if ($key !== 'gastro') x-cloak @endif role="tabpanel">
+                <div>
+                    <div class="tv"><div class="tv-screen">
+                        @foreach ($ind['pages'] as $n => $p)
+                            <div class="sg-stage" :class="{ on: page === {{ $n }} }" @class(['on' => $n === 0])>@include('display.page', ['page' => $p, 'mode' => 'tv'])</div>
+                        @endforeach
+                    </div></div>
+                    <div class="ind-pages">
+                        @foreach ($ind['pages'] as $n => $p)
+                            <button type="button" class="mini" @click="go({{ $n }})" :aria-current="page === {{ $n }}" aria-label="{{ $p->title }} zeigen">
+                                <span class="sg-stage" style="position:absolute;inset:0">@include('display.page', ['page' => $p, 'mode' => 'tv'])</span>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="phone-col">
+                    <div class="phone" style="position:relative;right:auto;bottom:auto;width:100%;transform:none">
+                        <div class="phone-notch"></div>
+                        <div class="phone-screen">
+                            @foreach ($ind['pages'] as $n => $p)
+                                <div class="phone-scale" x-show="page === {{ $n }}" @if ($n) x-cloak @endif>@include('display.page', ['page' => $p, 'mode' => 'mobile'])</div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
     </div>
 </section>
 
-{{-- Fragen --}}
-<section id="fragen" class="bg-white py-20">
-    <div class="mx-auto max-w-3xl px-4 sm:px-6">
-        <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Häufige Fragen</h2>
-        <div class="mt-10 divide-y divide-black/10">
-            @foreach ([
-                ['Welchen Fernseher brauche ich?', 'Jeden Fernseher oder Monitor mit Internet-Browser – oder eine günstige Android-TV-Box am HDMI-Anschluss. Dort öffnen Sie ' . str_replace(['https://', 'http://'], '', url('/tv')) . ' und geben den angezeigten Code in Ihrem Konto ein.'],
-                ['Was passiert nach der Testphase?', 'Nichts, solange Sie nichts tun: Die Testphase endet automatisch, es wird nichts abgebucht. Wählen Sie ein Paket, laufen Ihre Inhalte nahtlos weiter.'],
-                ['Kann ich jederzeit kündigen?', 'Ja. Monatspakete sind monatlich kündbar, mit einem Klick in Ihrem Konto.'],
-                ['Was ist, wenn das Internet ausfällt?', 'Der Bildschirm spielt den zuletzt geladenen Stand weiter und holt sich Änderungen, sobald die Verbindung wieder da ist.'],
-                ['Wie funktioniert das Bestellen?', 'Gäste scannen den QR-Code, legen Gerichte in den Warenkorb und schicken die Bestellung ab. Die Küche sieht sie sofort am Tablet und meldet „Fertig“ – der Gast sieht das am Handy, die Nummer erscheint auf dem Bildschirm. Bezahlt wird wie gewohnt vor Ort.'],
-                ['Welche Sprachen gibt es?', 'Englisch, Italienisch, Französisch, Spanisch, Niederländisch, Tschechisch, Slowakisch, Ungarisch, Slowenisch, Kroatisch, Polnisch, Türkisch, Ukrainisch, Russisch, Chinesisch und Japanisch. Die Übersetzung erstellt die KI, Preise bleiben unverändert.'],
-                ['Stimmen die Preise nach dem KI-Import?', 'Die KI überträgt Einträge und Preise sehr genau. Trotzdem sehen Sie danach alles in einer Vorschau und können jede Zeile prüfen und ändern, bevor sie erscheint.'],
-                ['Wie steht es um den Datenschutz?', 'Signo setzt keine Werbe- oder Tracking-Cookies, Schriften werden lokal geladen. Ihre Daten nutzen wir nur, um Ihre Anzeigen bereitzustellen.'],
-            ] as [$q, $a])
-                <details class="group py-5">
-                    <summary class="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold">
-                        {{ $q }}<span class="text-2xl font-light text-muted transition group-open:rotate-45">+</span>
-                    </summary>
-                    <p class="mt-3 text-ink/70">{{ $a }}</p>
-                </details>
-            @endforeach
+{{-- ===== So geht's (echte Reihenfolge) ===== --}}
+<section class="sec">
+    <div class="wrap">
+        <div class="sec-head"><h2 class="d2">Drei Schritte, kein Handbuch.</h2></div>
+        <div class="steps">
+            <div class="step"><div class="n">1</div><h3 class="d3">Karte hochladen</h3><p>Foto, PDF oder einfach eintippen. Die KI überträgt alle Einträge und Preise.</p></div>
+            <div class="step"><div class="n">2</div><h3 class="d3">Aussehen wählen</h3><p>Hell oder dunkel, Ihre Farbe, moderne oder elegante Schrift. Die Größe passt sich von selbst an.</p></div>
+            <div class="step"><div class="n">3</div><h3 class="d3">Fernseher verbinden</h3><p>Am Fernseher {{ $tvHost }} öffnen, den Code eingeben – läuft. Änderungen erscheinen in Sekunden.</p></div>
         </div>
     </div>
 </section>
 
-<section class="py-20">
-    <div class="mx-auto max-w-6xl px-4 sm:px-6">
-        <div class="rounded-[2rem] bg-brand px-6 py-14 text-center text-white sm:px-12">
-            <h2 class="text-3xl font-extrabold tracking-tight sm:text-5xl">Heute noch auf dem Bildschirm.</h2>
-            <p class="mx-auto mt-4 max-w-xl text-lg text-white/85">Konto anlegen, Foto hochladen, Fernseher verbinden. Mehr ist es nicht.</p>
-            <a href="{{ route('register') }}" class="btn mt-8 bg-white px-8 py-3.5 text-base text-ink hover:bg-paper">{{ config('signo.trial_days') }} Tage kostenlos testen</a>
+{{-- ===== Funktionen mit lebenden Beispielen ===== --}}
+<section class="sec feat" id="funktionen">
+    <div class="wrap">
+        <div class="sec-head">
+            <h2 class="d2">Mehr als eine Speisekarte.</h2>
+            <p class="lead muted">Alle Funktionen sind in jedem Paket enthalten.</p>
+        </div>
+        <div class="feat-list">
+            <div class="feat-item"><div><h3 class="d3">Ändern per Sprache</h3><p>„Schnitzel kostet jetzt 19,90.“ Ins Handy sagen, Vorschau prüfen, übernehmen.</p></div>
+                <div class="viz viz-voice" aria-hidden="true">@for ($i = 0; $i < 9; $i++)<i></i>@endfor</div></div>
+            <div class="feat-item"><div><h3 class="d3">16 Sprachen automatisch</h3><p>Gäste sehen die Karte in ihrer Sprache. Am Bildschirm wechseln die Sprachen auf Wunsch ab.</p></div>
+                <div class="viz viz-lang" aria-hidden="true"><span>Speisekarte</span><span>Menu</span><span>Menù</span><span>Carte</span></div></div>
+            <div class="feat-item"><div><h3 class="d3">Bestellen per QR-Code</h3><p>Gäste bestellen am Handy, die Küche sieht es am Tablet, die Abholnummer erscheint am Bildschirm.</p></div>
+                <div class="viz viz-order" aria-hidden="true">#27 ✓</div></div>
+            <div class="feat-item"><div><h3 class="d3">Uhr, Wetter, Countdown</h3><p>Live-Bausteine für Empfang und Wartebereich, dazu eine Laufschrift für kurze Hinweise.</p></div>
+                <div class="viz viz-clock" aria-hidden="true" data-clock>{{ now()->format('H:i') }}</div></div>
+            <div class="feat-item"><div><h3 class="d3">Zeitpläne</h3><p>Frühstückskarte bis 11 Uhr, Mittagsmenü nur Mo–Fr, Adventaktion vom 1. bis 24. Dezember.</p></div>
+                <div class="viz viz-ticker" aria-hidden="true"><span>Mo–Fr 11:30–14:00 · Mittagsmenü · Sa–So Brunch</span></div></div>
+            <div class="feat-item"><div><h3 class="d3">Läuft auch ohne Internet</h3><p>Fällt die Verbindung aus, zeigt der Bildschirm den letzten Stand weiter – samt Bildern und Videos.</p></div>
+                <div class="viz viz-offline" aria-hidden="true">📶✕ ▶</div></div>
+            <div class="feat-item"><div><h3 class="d3">Team und Standorte</h3><p>Mitarbeiter einladen, mehrere Filialen in einem Konto, jeder Standort mit eigenen Bildschirmen.</p></div>
+                <div class="viz" aria-hidden="true" style="font-size:1.9rem">👥 🏬</div></div>
+            <div class="feat-item"><div><h3 class="d3">Texte und Fotos per Klick</h3><p>Ein paar Stichworte genügen: Signo schlägt Texte für Ihr Angebot vor und findet passende Fotos.</p></div>
+                <div class="viz" aria-hidden="true" style="font-size:1.9rem">✍️ 📷</div></div>
         </div>
     </div>
 </section>
 
-<footer class="border-t border-black/5 py-10">
-    <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 text-sm text-muted sm:px-6">
-        <x-logo />
-        <div class="flex flex-wrap gap-5">
-            <a href="{{ route('legal', 'impressum') }}" class="hover:text-ink">Impressum</a>
-            <a href="{{ route('legal', 'datenschutz') }}" class="hover:text-ink">Datenschutz</a>
-            <a href="{{ route('legal', 'agb') }}" class="hover:text-ink">AGB</a>
-            <a href="mailto:{{ config('signo.company.email') }}" class="hover:text-ink">Kontakt</a>
+{{-- ===== Preise ===== --}}
+<section class="sec" id="preise">
+    <div class="wrap">
+        <div class="sec-head">
+            <h2 class="d2">Was kostet das für Sie?</h2>
+            <p class="lead muted">{{ config('signo.trial_days') }} Tage alles kostenlos. Danach monatlich kündbar, Preise inkl. USt.</p>
         </div>
-        <p>© {{ date('Y') }} {{ config('signo.company.name') }}</p>
+        <div class="price-grid">
+            <div class="calc" x-data="signoCalc(@js($plans))">
+                <label for="screens">Wie viele Bildschirme haben Sie?</label>
+                <input id="screens" type="range" min="0" max="10" step="1" x-model.number="n">
+                <div class="scale"><span>nur QR & Handy</span><span>1</span><span>5</span><span>10</span></div>
+                <p class="big">
+                    <template x-if="plan.price"><span x-text="euro(plan.price)"></span></template>
+                    <template x-if="!plan.price"><span>Auf Anfrage</span></template>
+                    <small style="font-size:1.1rem;font-weight:500;color:#5b6480" x-show="plan.price" x-text="plan.interval === 'year' ? 'pro Jahr' : 'pro Monat'"></small>
+                </p>
+                <p class="muted" style="margin:0"><strong x-text="plan.name" style="color:var(--ink)"></strong><span x-show="perScreen() && n > 1" x-text="' · ' + perScreen() + ' je Bildschirm'"></span></p>
+                <ul><template x-for="f in plan.features" :key="f"><li x-text="f"></li></template></ul>
+                <a :href="plan.key === 'custom' ? 'mailto:{{ config('signo.company.email') }}' : '{{ route('register') }}'" class="b b-signal" style="width:100%" x-text="plan.key === 'custom' ? 'Angebot anfragen' : 'Kostenlos starten'"></a>
+            </div>
+
+            <div class="cmp-wrap">
+                <table class="cmp">
+                    <thead><tr><th></th><th>Signo</th><th>Gedruckte Karte</th><th>Klassische Signage-Software</th></tr></thead>
+                    <tbody>
+                        <tr><th>Preis ändern</th><td>Sekunden, auch per Sprache</td><td>Neu drucken</td><td>Layout öffnen, bearbeiten, veröffentlichen</td></tr>
+                        <tr><th>Gestaltung</th><td>Fertig aus dem Foto</td><td>Grafiker oder Copyshop</td><td>Selbst gestalten</td></tr>
+                        <tr><th>Handy & QR-Code</th><td>Inklusive</td><td class="no">–</td><td class="no">meist eigenes Produkt</td></tr>
+                        <tr><th>Mehrsprachig</th><td>16 Sprachen automatisch</td><td>Je Sprache drucken</td><td>Je Sprache gestalten</td></tr>
+                        <tr><th>Bestellen per Handy</th><td>Inklusive</td><td class="no">–</td><td class="no">–</td></tr>
+                        <tr><th>Gerät</th><td>Jeder Fernseher mit Browser oder Android-Box</td><td class="no">–</td><td>oft eigener Player nötig</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+
+{{-- ===== Fragen ===== --}}
+<section class="sec faq" id="fragen" style="background:#fff">
+    <div class="wrap" style="max-width:860px">
+        <div class="sec-head"><h2 class="d2">Häufige Fragen</h2></div>
+        @foreach ([
+            ['Welchen Fernseher brauche ich?', 'Jeden Fernseher oder Monitor mit Internet-Browser – oder eine günstige Android-TV-Box am HDMI-Anschluss. Dort ' . $tvHost . ' öffnen und den angezeigten Code in Ihrem Konto eingeben.'],
+            ['Was passiert nach der Testphase?', 'Nichts, solange Sie nichts tun: Die Testphase endet automatisch, es wird nichts abgebucht. Wählen Sie ein Paket, laufen Ihre Inhalte nahtlos weiter.'],
+            ['Wie funktioniert das Bestellen?', 'Gäste scannen den QR-Code, legen Gerichte in den Warenkorb und schicken die Bestellung ab. Die Küche sieht sie sofort am Tablet und meldet „Fertig“ – der Gast sieht das am Handy, die Nummer erscheint auf dem Bildschirm. Bezahlt wird wie gewohnt vor Ort.'],
+            ['Welche Sprachen gibt es?', 'Englisch, Italienisch, Französisch, Spanisch, Niederländisch, Tschechisch, Slowakisch, Ungarisch, Slowenisch, Kroatisch, Polnisch, Türkisch, Ukrainisch, Russisch, Chinesisch und Japanisch.'],
+            ['Was ist, wenn das Internet ausfällt?', 'Der Bildschirm spielt den zuletzt geladenen Stand weiter und holt sich Änderungen, sobald die Verbindung wieder da ist.'],
+            ['Stimmen die Preise nach dem KI-Import?', 'Die KI überträgt Einträge und Preise sehr genau. Trotzdem sehen Sie danach alles in einer Vorschau und können jede Zeile prüfen, bevor sie erscheint.'],
+            ['Kann ich mehrere Filialen verwalten?', 'Ja. Jeder Standort hat eigene Seiten und Bildschirme, Sie wechseln mit einem Klick. Mitarbeiter laden Sie per E-Mail ein.'],
+            ['Wie steht es um den Datenschutz?', 'Signo setzt keine Werbe- oder Tracking-Cookies, Schriften werden von unserem Server geladen. Ihre Daten nutzen wir nur, um Ihre Anzeigen bereitzustellen.'],
+        ] as [$q, $a])
+            <details><summary>{{ $q }}</summary><p>{{ $a }}</p></details>
+        @endforeach
+    </div>
+</section>
+
+<section class="sec final">
+    <div class="wrap">
+        <h2 class="d1" style="font-size:clamp(2.6rem,6vw,5rem)">Heute noch auf dem Bildschirm.</h2>
+        <a href="{{ route('register') }}" class="b">{{ config('signo.trial_days') }} Tage kostenlos testen</a>
+    </div>
+</section>
+
+<footer class="foot">
+    <div class="wrap">
+        <span>© {{ date('Y') }} {{ config('signo.company.name') }}</span>
+        <span>
+            <a href="{{ route('legal', 'impressum') }}">Impressum</a>
+            <a href="{{ route('legal', 'datenschutz') }}">Datenschutz</a>
+            <a href="{{ route('legal', 'agb') }}">AGB</a>
+            <a href="mailto:{{ config('signo.company.email') }}">Kontakt</a>
+        </span>
     </div>
 </footer>
 

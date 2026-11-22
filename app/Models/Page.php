@@ -11,7 +11,7 @@ class Page extends Model
 {
     protected $fillable = [
         'organization_id', 'title', 'template', 'theme', 'accent', 'font', 'data', 'slug', 'is_public', 'position',
-        'languages', 'translations', 'translated_hash', 'tv_languages', 'orderable',
+        'languages', 'translations', 'translated_hash', 'tv_languages', 'orderable', 'schedule',
     ];
 
     protected function casts(): array
@@ -23,6 +23,7 @@ class Page extends Model
             'translations' => 'array',
             'tv_languages' => 'boolean',
             'orderable' => 'boolean',
+            'schedule' => 'array',
         ];
     }
 
@@ -60,6 +61,44 @@ class Page extends Model
         if (! $path) return null;
         if (Str::startsWith($path, ['http://', 'https://', '/'])) return $path;
         return '/storage/' . ltrim($path, '/');
+    }
+
+    /** Läuft die Seite laut Zeitplan gerade? */
+    public function isActiveAt(?\Illuminate\Support\Carbon $at = null): bool
+    {
+        $s = $this->schedule;
+        if (! $s || empty($s['enabled'])) return true;
+        $at = ($at ?? now())->copy()->timezone(config('app.timezone'));
+        $date = $at->format('Y-m-d');
+        if (! empty($s['from']) && $date < $s['from']) return false;
+        if (! empty($s['until']) && $date > $s['until']) return false;
+        $days = $s['days'] ?? [];
+        if ($days && ! in_array($at->dayOfWeekIso, array_map('intval', $days), true)) return false;
+        if (! empty($s['start']) && ! empty($s['end'])) {
+            $hm = $at->format('H:i');
+            if ($s['start'] < $s['end']) return $hm >= $s['start'] && $hm < $s['end'];
+            return $hm >= $s['start'] || $hm < $s['end'];   // über Mitternacht
+        }
+        return true;
+    }
+
+    public function scheduleLabel(): ?string
+    {
+        $s = $this->schedule;
+        if (! $s || empty($s['enabled'])) return null;
+        $parts = [];
+        $names = [1 => 'Mo', 2 => 'Di', 3 => 'Mi', 4 => 'Do', 5 => 'Fr', 6 => 'Sa', 7 => 'So'];
+        $days = array_map('intval', $s['days'] ?? []);
+        if ($days && count($days) < 7) {
+            sort($days);
+            $parts[] = $days === [1, 2, 3, 4, 5] ? 'Mo–Fr' : ($days === [6, 7] ? 'Sa–So' : implode(', ', array_map(fn ($d) => $names[$d], $days)));
+        }
+        if (! empty($s['start']) && ! empty($s['end'])) $parts[] = $s['start'] . '–' . $s['end'];
+        if (! empty($s['from']) || ! empty($s['until'])) {
+            $f = fn ($d) => $d ? \Illuminate\Support\Carbon::parse($d)->format('d.m.') : '…';
+            $parts[] = $f($s['from'] ?? null) . ' bis ' . $f($s['until'] ?? null);
+        }
+        return $parts ? implode(' · ', $parts) : 'Zeitplan';
     }
 
     /** Diese Seite in einer anderen Sprache (Übersetzung über die Originaldaten gelegt). */

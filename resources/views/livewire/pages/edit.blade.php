@@ -83,6 +83,30 @@
             <div class="card space-y-5 p-5">
                 <h2 class="font-semibold">Inhalt</h2>
 
+                @if (in_array($t, ['offer', 'info']) && $aiReady)
+                    <div class="rounded-2xl bg-paper p-4 ring-1 ring-black/5">
+                        <p class="text-sm font-semibold">✨ Texte vorschlagen lassen</p>
+                        <form wire:submit="suggest" class="mt-2 flex gap-2">
+                            <input wire:model="idea" class="input" placeholder="Stichworte, z. B. Kürbissuppe, Herbst, hausgemacht">
+                            <button class="btn-primary btn-sm shrink-0" wire:loading.attr="disabled" wire:target="suggest">
+                                <span wire:loading.remove wire:target="suggest">Vorschlagen</span><span wire:loading wire:target="suggest">…</span>
+                            </button>
+                        </form>
+                        @if ($ideaError) <p class="error mt-2">{{ $ideaError }}</p> @endif
+                        @if ($ideas)
+                            <div class="mt-3 grid gap-2">
+                                @foreach ($ideas as $i => $idea)
+                                    <button wire:click="useIdea({{ $i }})" class="rounded-xl bg-white p-3 text-left ring-1 ring-black/10 transition hover:ring-ink">
+                                        @if ($t === 'offer' && $idea['kicker'])<span class="chip bg-brand text-white">{{ $idea['kicker'] }}</span>@endif
+                                        <span class="mt-1 block font-semibold">{{ $idea['heading'] }}</span>
+                                        <span class="block text-sm text-muted">{{ $idea['text'] }}</span>
+                                    </button>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
                 @if ($t === 'list')
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div><label class="label">Überschrift</label><input {!! $live !!}="data.heading" class="input"></div>
@@ -121,6 +145,7 @@
                     @endforeach
                     <button wire:click="addSection" class="btn-ghost btn-sm">+ Neue Gruppe</button>
                     <div><label class="label">Fußzeile</label><input {!! $live !!}="data.footer" class="input" placeholder="z. B. Alle Preise in Euro inkl. MwSt."></div>
+                    <div><label class="label">Laufschrift (optional)</label><input {!! $live !!}="data.ticker" class="input" placeholder="z. B. Heute Live-Musik ab 19 Uhr · Happy Hour 17–18 Uhr"><p class="hint">Läuft am Bildschirm unten durchs Bild.</p></div>
 
                 @elseif ($t === 'offer')
                     <div class="grid gap-4 sm:grid-cols-2">
@@ -134,6 +159,7 @@
                     </div>
                     @include('livewire.pages.partials.image', ['key' => 'image', 'label' => 'Bild (optional)'])
                     <div><label class="label">Fußzeile</label><input {!! $live !!}="data.footer" class="input" placeholder="optional"></div>
+                    <div><label class="label">Laufschrift (optional)</label><input {!! $live !!}="data.ticker" class="input" placeholder="z. B. Heute Live-Musik ab 19 Uhr · Happy Hour 17–18 Uhr"><p class="hint">Läuft am Bildschirm unten durchs Bild.</p></div>
 
                 @elseif ($t === 'info')
                     <div><label class="label">Überschrift</label><input {!! $live !!}="data.heading" class="input"></div>
@@ -153,7 +179,22 @@
                     </div>
                     @include('livewire.pages.partials.image', ['key' => 'image', 'label' => 'Bild (optional)'])
                     <div><label class="label">Fußzeile</label><input {!! $live !!}="data.footer" class="input" placeholder="optional"></div>
+                    <div><label class="label">Laufschrift (optional)</label><input {!! $live !!}="data.ticker" class="input" placeholder="z. B. Heute Live-Musik ab 19 Uhr · Happy Hour 17–18 Uhr"><p class="hint">Läuft am Bildschirm unten durchs Bild.</p></div>
 
+                @elseif ($t === 'clock')
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div><label class="label">Überschrift</label><input {!! $live !!}="data.heading" class="input" placeholder="optional, z. B. Willkommen"></div>
+                        <div><label class="label">Ort für das Wetter</label><input {!! $live !!}="data.city" class="input" placeholder="z. B. Wien"></div>
+                    </div>
+                    <label class="flex items-center gap-2.5 text-sm"><input type="checkbox" wire:model.live="data.weather" class="h-4 w-4 accent-ink"> Aktuelles Wetter anzeigen</label>
+                    <div><label class="label">Text darunter</label><input {!! $live !!}="data.text" class="input" placeholder="optional"></div>
+                @elseif ($t === 'countdown')
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div><label class="label">Überschrift</label><input {!! $live !!}="data.heading" class="input"></div>
+                        <div><label class="label">Zeitpunkt</label><input type="datetime-local" wire:model.live="data.target" class="input"></div>
+                    </div>
+                    <div><label class="label">Text</label><input {!! $live !!}="data.text" class="input" placeholder="optional"></div>
+                    <div><label class="label">Text, wenn es so weit ist</label><input {!! $live !!}="data.done_text" class="input" placeholder="z. B. Jetzt geöffnet!"></div>
                 @elseif ($t === 'orders')
                     <p class="text-sm text-muted">Diese Seite zeigt automatisch die Bestellnummern „In Zubereitung“ und „Bitte abholen“. Sie wird von der Küche gesteuert – hier gibt es nichts einzutragen.</p>
                 @elseif ($t === 'media')
@@ -168,6 +209,43 @@
                 @endif
             </div>
 
+
+
+            {{-- Zeitplan --}}
+            <div class="card p-5">
+                <h2 class="font-semibold">🕒 Wann anzeigen?</h2>
+                <div class="mt-4 inline-flex rounded-full bg-sand p-1 text-sm font-medium">
+                    <button wire:click="$set('schedule.enabled', false)" class="rounded-full px-4 py-1.5 {{ ! $schedule['enabled'] ? 'bg-white shadow-sm' : 'text-muted' }}">Immer</button>
+                    <button wire:click="$set('schedule.enabled', true)" class="rounded-full px-4 py-1.5 {{ $schedule['enabled'] ? 'bg-white shadow-sm' : 'text-muted' }}">Nach Zeitplan</button>
+                </div>
+                @if ($schedule['enabled'])
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        @foreach ([1 => 'Mo', 2 => 'Di', 3 => 'Mi', 4 => 'Do', 5 => 'Fr', 6 => 'Sa', 7 => 'So'] as $n => $lbl)
+                            <label class="cursor-pointer">
+                                <input type="checkbox" wire:model.live="schedule.days" value="{{ $n }}" class="peer sr-only">
+                                <span class="inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium ring-1 ring-black/10 peer-checked:bg-ink peer-checked:text-white">{{ $lbl }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <span class="label">Uhrzeit (optional)</span>
+                            <div class="flex items-center gap-2 text-sm">
+                                <input type="time" wire:model.live.debounce.700ms="schedule.start" class="input py-1.5"> <span>bis</span>
+                                <input type="time" wire:model.live.debounce.700ms="schedule.end" class="input py-1.5">
+                            </div>
+                        </div>
+                        <div>
+                            <span class="label">Zeitraum (optional)</span>
+                            <div class="flex items-center gap-2 text-sm">
+                                <input type="date" wire:model.live="schedule.from" class="input py-1.5"> <span>bis</span>
+                                <input type="date" wire:model.live="schedule.until" class="input py-1.5">
+                            </div>
+                        </div>
+                    </div>
+                    <p class="hint mt-3">Beispiel: Frühstückskarte Mo–Fr 06:00–11:00, Aktion vom 1. bis 24. Dezember. Außerhalb läuft die Seite nicht auf den Bildschirmen.</p>
+                @endif
+            </div>
 
             {{-- Sprachen --}}
             @if ($t !== 'media')

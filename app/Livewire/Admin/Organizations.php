@@ -42,17 +42,14 @@ class Organizations extends Component
     {
         $org = Organization::findOrFail($id);
         abort_if($org->id === auth()->user()->organization_id, 400);
-        Storage::disk('public')->deleteDirectory('org/' . $org->id);
-        $org->screens()->delete();
-        $org->users()->delete();
-        $org->delete();
+        $org->deleteCompletely();
     }
 
     public function render()
     {
         abort_unless(auth()->user()->is_admin, 403);
         $orgs = Organization::query()
-            ->with(['users:id,organization_id,email,name,last_login_at'])
+            ->with(['users:id,email,name,last_login_at'])
             ->withCount(['pages', 'screens'])
             ->when($this->q, fn ($q) => $q->where('name', 'like', "%{$this->q}%")
                 ->orWhereHas('users', fn ($u) => $u->where('email', 'like', "%{$this->q}%")))
