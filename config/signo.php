@@ -36,6 +36,7 @@ return [
         'offer' => ['label' => 'Angebot',           'hint' => 'Tagesangebot, Aktion, Neuheit'],
         'info'  => ['label' => 'Information',        'hint' => 'Willkommen, Öffnungszeiten, Hinweis'],
         'media' => ['label' => 'Bild oder Video',    'hint' => 'Plakat, Foto, Werbespot'],
+        'orders' => ['label' => 'Abholanzeige',      'hint' => 'Bestellnummern für Gäste', 'hidden' => true],
     ],
 
     // Akzentfarben zur Auswahl
@@ -57,17 +58,17 @@ return [
     'plans' => [
         'qr' => [
             'name' => 'QR & Web',
-            'price' => 9000, 'interval' => 'year',
+            'price' => 2900, 'interval' => 'year',
             'screens' => 0,
             'stripe_price' => env('STRIPE_PRICE_QR'),
-            'features' => ['Alle Vorlagen hell & dunkel', 'KI-Import aus Foto oder PDF', 'QR-Code & Mobilseite', 'Unbegrenzt Änderungen'],
+            'features' => ['Alle Vorlagen hell & dunkel', 'KI-Import aus Foto oder PDF', 'QR-Code & Handy-Seite', 'Automatisch in 16 Sprachen', 'Bestellen per Handy mit Küchenansicht', 'Ändern per Sprache'],
         ],
         'screen' => [
             'name' => 'Bildschirm',
             'price' => 1900, 'interval' => 'month',
             'screens' => 1,
             'stripe_price' => env('STRIPE_PRICE_SCREEN'),
-            'features' => ['Alles aus QR & Web', '1 Bildschirm', 'Betriebszeiten & Fernsteuerung', 'Offline-Wiedergabe'],
+            'features' => ['Alles aus QR & Web', '1 Bildschirm', 'Abholanzeige für Bestellungen', 'Betriebszeiten & Fernsteuerung', 'Offline-Wiedergabe'],
         ],
         'multi' => [
             'name' => 'Mehrere Bildschirme',
@@ -84,6 +85,7 @@ return [
     'ai' => [
         'key'   => env('ANTHROPIC_API_KEY'),
         'model' => env('ANTHROPIC_MODEL', 'claude-sonnet-5-5'),
+        'url' => env('SIGNO_AI_URL', 'https://api.anthropic.com'),
         // Abtippen braucht wenig Nachdenken: "low" ist schneller und günstiger
         'effort' => env('ANTHROPIC_EFFORT', 'low'),
         'daily_limit' => (int) env('SIGNO_AI_DAILY_LIMIT', 20),

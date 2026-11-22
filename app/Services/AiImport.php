@@ -32,58 +32,68 @@ class AiImport
     }
 
     /**
-     * @return array{template:string,title:string,data:array}
+     * Allgemeine KI-Anfrage mit strukturierter Antwort (zählt zum Tageslimit).
      */
-    public static function run(Organization $org, ?UploadedFile $file, string $text): array
+    public static function request(Organization $org, array $content, array $schema, int $maxTokens = 8000): array
     {
         if (! self::available()) {
-            throw new RuntimeException('Der KI-Import ist noch nicht eingerichtet.');
+            throw new RuntimeException('Die KI ist noch nicht eingerichtet.');
         }
         if (self::remainingToday($org) <= 0) {
-            throw new RuntimeException('Das Tageslimit für KI-Importe ist erreicht. Morgen geht es wieder.');
+            throw new RuntimeException('Das Tageslimit für KI-Funktionen ist erreicht. Morgen geht es wieder.');
         }
-
-        $content = [];
-        if ($file) $content[] = self::fileBlock($file);
-        $industry = $org->industryLabel();
-        $content[] = ['type' => 'text', 'text' => self::prompt($industry, $text)];
 
         $res = Http::withHeaders([
             'x-api-key' => config('signo.ai.key'),
             'anthropic-version' => '2023-06-01',
-        ])->timeout(150)->connectTimeout(15)->post('https://api.anthropic.com/v1/messages', [
+        ])->timeout(150)->connectTimeout(15)->post(rtrim(config('signo.ai.url'), '/') . '/v1/messages', [
             'model' => config('signo.ai.model'),
-            'max_tokens' => 16000,
+            'max_tokens' => $maxTokens,
             'messages' => [['role' => 'user', 'content' => $content]],
             'output_config' => array_filter([
                 'effort' => config('signo.ai.effort') ?: null,
-                'format' => ['type' => 'json_schema', 'schema' => self::schema()],
+                'format' => ['type' => 'json_schema', 'schema' => $schema],
             ]),
         ]);
 
         if (! $res->successful()) {
-            Log::warning('KI-Import fehlgeschlagen', ['status' => $res->status(), 'body' => mb_substr($res->body(), 0, 1000)]);
-            $msg = match (true) {
+            Log::warning('KI-Anfrage fehlgeschlagen', ['status' => $res->status(), 'body' => mb_substr($res->body(), 0, 1000)]);
+            throw new RuntimeException(match (true) {
                 $res->status() === 401 => 'Der KI-Schlüssel ist ungültig. Bitte in der .env prüfen.',
                 $res->status() === 429 || $res->status() === 529 => 'Die KI ist gerade ausgelastet. Bitte in einer Minute erneut versuchen.',
                 $res->status() === 413 => 'Die Datei ist zu groß.',
-                default => 'Die KI konnte die Datei nicht verarbeiten (Fehler ' . $res->status() . ').',
-            };
-            throw new RuntimeException($msg);
+                default => 'Die KI konnte die Anfrage nicht verarbeiten (Fehler ' . $res->status() . ').',
+            });
         }
 
         Cache::put(self::counterKey($org), (int) Cache::get(self::counterKey($org), 0) + 1, now()->endOfDay());
 
         if ($res->json('stop_reason') === 'max_tokens') {
-            throw new RuntimeException('Die Vorlage ist sehr umfangreich. Bitte in zwei Teilen hochladen (z. B. Speisen und Getränke getrennt).');
+            throw new RuntimeException('Der Inhalt ist sehr umfangreich. Bitte in kleineren Teilen versuchen.');
         }
         $json = collect($res->json('content', []))->firstWhere('type', 'text')['text'] ?? '';
         $out = json_decode($json, true);
-        if (! is_array($out)) {
-            if (preg_match('/\{.*\}/s', $json, $m)) $out = json_decode($m[0], true);
-        }
-        if (! is_array($out)) {
-            throw new RuntimeException('Die KI hat keine verwertbaren Inhalte gefunden.');
+        if (! is_array($out) && preg_match('/\{.*\}/s', $json, $m)) $out = json_decode($m[0], true);
+        if (! is_array($out)) throw new RuntimeException('Die KI hat keine verwertbare Antwort geliefert.');
+        return $out;
+    }
+
+    /**
+     * @return array{template:string,title:string,data:array}
+     */
+    public static function run(Organization $org, ?UploadedFile $file, string $text): array
+    {
+        $content = [];
+        if ($file) $content[] = self::fileBlock($file);
+        $content[] = ['type' => 'text', 'text' => self::prompt($org->industryLabel(), $text)];
+
+        try {
+            $out = self::request($org, $content, self::schema(), 16000);
+        } catch (RuntimeException $e) {
+            if (str_contains($e->getMessage(), 'sehr umfangreich')) {
+                throw new RuntimeException('Die Vorlage ist sehr umfangreich. Bitte in zwei Teilen hochladen (z. B. Speisen und Getränke getrennt).');
+            }
+            throw $e;
         }
         if (($out['readable'] ?? true) === false) {
             throw new RuntimeException('Auf der Datei war leider nichts Lesbares zu erkennen. Bitte ein schärferes Foto verwenden.');

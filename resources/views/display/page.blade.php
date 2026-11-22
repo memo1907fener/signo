@@ -3,6 +3,8 @@
     $d = $page->data ?? [];
     $mode = $mode ?? 'tv';
     $img = fn ($p) => \App\Models\Page::fileUrl($p);
+    $ordering = $ordering ?? false;
+    $orderPrice = fn ($p) => $ordering ? \App\Models\Order::parsePrice($p) : null;
 @endphp
 <div class="sg-page sg-{{ $mode }} sg-theme-{{ $page->theme }} sg-font-{{ $page->font }} sg-t-{{ $page->template }}"
      style="--accent: {{ $page->accentColor() }};" data-revision="{{ $page->revision() }}">
@@ -10,8 +12,9 @@
 
     @if ($page->template === 'list')
         @php
-            $sections = collect($d['sections'] ?? [])->map(function ($s) {
-                $s['items'] = collect($s['items'] ?? [])->filter(fn ($i) => trim(($i['name'] ?? '') . ($i['price'] ?? '')) !== '')->values()->all();
+            $sections = collect($d['sections'] ?? [])->map(function ($s, $si) {
+                $s['items'] = collect($s['items'] ?? [])->map(fn ($i, $ii) => $i + ['_s' => $si, '_i' => $ii])
+                    ->filter(fn ($i) => trim(($i['name'] ?? '') . ($i['price'] ?? '')) !== '')->values()->all();
                 return $s;
             })->filter(fn ($s) => count($s['items']) || trim($s['title'] ?? '') !== '')->values();
             $count = $sections->sum(fn ($s) => count($s['items']) + (trim($s['title'] ?? '') !== '' ? 1.5 : 0));
@@ -24,7 +27,7 @@
             @endif
         </header>
         <div class="sg-list" style="--cols: {{ $cols }}">
-            @foreach ($sections as $s)
+            @foreach ($sections as $sIdx => $s)
                 <section class="sg-section">
                     @if (trim($s['title'] ?? '') !== '')
                         <h2 class="sg-h2">{{ $s['title'] }}</h2>
@@ -35,6 +38,9 @@
                                 <span class="sg-item-name">{{ $it['name'] ?? '' }}</span>
                                 <span class="sg-dots"></span>
                                 <span class="sg-item-price">{{ $it['price'] ?? '' }}</span>
+                                @if ($cents = $orderPrice($it['price'] ?? ''))
+                                    <button type="button" class="sg-add" @click="add({{ $it['_s'] }}, {{ $it['_i'] }}, @js($it['name'] ?? ''), {{ $cents }})" aria-label="In den Warenkorb">+</button>
+                                @endif
                             </div>
                             @if (! empty($it['description']))
                                 <div class="sg-item-desc">{{ $it['description'] }}</div>
@@ -98,6 +104,16 @@
             </div>
             @if (! empty($d['image']))
                 <div class="sg-split-img"><img src="{{ $img($d['image']) }}" alt=""></div>
+            @endif
+        </div>
+
+    @elseif ($page->template === 'orders')
+        @php $tok = $page->organization?->kitchen_token; @endphp
+        <div class="sg-media">
+            @if ($tok)
+                <iframe src="{{ route('board', ['token' => $tok, 'theme' => $page->theme]) }}" style="border:0;width:100%;height:100%;display:block" title="Abholanzeige"></iframe>
+            @else
+                <div class="sg-empty">Bestellen ist noch nicht eingeschaltet</div>
             @endif
         </div>
 

@@ -26,7 +26,7 @@ class Index extends Component
 
     public function create(string $template)
     {
-        abort_unless(array_key_exists($template, config('signo.templates')), 404);
+        abort_unless(array_key_exists($template, config('signo.templates')) && ! (config("signo.templates.$template.hidden") ?? false), 404);
         $org = $this->org();
         $page = Page::create([
             'organization_id' => $org->id,

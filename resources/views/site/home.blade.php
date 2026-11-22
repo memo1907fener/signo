@@ -119,8 +119,12 @@
 <section class="bg-ink py-20 text-white">
     <div class="mx-auto max-w-6xl px-4 sm:px-6">
         <h2 class="text-3xl font-bold tracking-tight sm:text-4xl">Alles drin. Nichts zu viel.</h2>
+        <p class="mt-2 text-lg text-white/60">Alle Funktionen sind in jedem Paket enthalten.</p>
         <div class="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ([
+                ['Ändern per Sprache', '„Schnitzel kostet jetzt 19,90“ – ins Handy sagen, Vorschau prüfen, fertig. Kein Tippen in Formularen.'],
+                ['16 Sprachen automatisch', 'Gäste sehen Ihre Karte in ihrer Sprache. Am Bildschirm wechseln die Sprachen auf Wunsch ab.'],
+                ['Bestellen per QR-Code', 'Gäste bestellen am Handy, die Küche sieht es sofort am Tablet. Die Abholnummern erscheinen am Bildschirm.'],
                 ['Hell & dunkel', 'Jede Seite als helle oder dunkle Variante, mit Ihrer Akzentfarbe und passender Schrift.'],
                 ['QR-Code inklusive', 'Jede Seite gibt es auch fürs Handy. QR-Code ausdrucken, auf den Tisch stellen – immer aktuell.'],
                 ['Passt immer', 'Viel Text? Die Schrift passt sich automatisch an, damit alles auf den Bildschirm passt. Auch im Hochformat.'],
@@ -174,6 +178,8 @@
                 ['Was passiert nach der Testphase?', 'Nichts, solange Sie nichts tun: Die Testphase endet automatisch, es wird nichts abgebucht. Wählen Sie ein Paket, laufen Ihre Inhalte nahtlos weiter.'],
                 ['Kann ich jederzeit kündigen?', 'Ja. Monatspakete sind monatlich kündbar, mit einem Klick in Ihrem Konto.'],
                 ['Was ist, wenn das Internet ausfällt?', 'Der Bildschirm spielt den zuletzt geladenen Stand weiter und holt sich Änderungen, sobald die Verbindung wieder da ist.'],
+                ['Wie funktioniert das Bestellen?', 'Gäste scannen den QR-Code, legen Gerichte in den Warenkorb und schicken die Bestellung ab. Die Küche sieht sie sofort am Tablet und meldet „Fertig“ – der Gast sieht das am Handy, die Nummer erscheint auf dem Bildschirm. Bezahlt wird wie gewohnt vor Ort.'],
+                ['Welche Sprachen gibt es?', 'Englisch, Italienisch, Französisch, Spanisch, Niederländisch, Tschechisch, Slowakisch, Ungarisch, Slowenisch, Kroatisch, Polnisch, Türkisch, Ukrainisch, Russisch, Chinesisch und Japanisch. Die Übersetzung erstellt die KI, Preise bleiben unverändert.'],
                 ['Stimmen die Preise nach dem KI-Import?', 'Die KI überträgt Einträge und Preise sehr genau. Trotzdem sehen Sie danach alles in einer Vorschau und können jede Zeile prüfen und ändern, bevor sie erscheint.'],
                 ['Wie steht es um den Datenschutz?', 'Signo setzt keine Werbe- oder Tracking-Cookies, Schriften werden lokal geladen. Ihre Daten nutzen wir nur, um Ihre Anzeigen bereitzustellen.'],
             ] as [$q, $a])

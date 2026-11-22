@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class PublicPageController extends Controller
 {
-    public function show(string $slug)
+    public function show(Request $request, string $slug)
     {
         $page = Page::with('organization')->where('slug', $slug)->firstOrFail();
         $org = $page->organization;
@@ -17,10 +17,23 @@ class PublicPageController extends Controller
             return response()->view('site.paused', ['org' => $org], 503);
         }
 
-        $others = $org->pages()->where('is_public', true)->where('template', '!=', 'media')->get(['id', 'title', 'slug']);
+        $others = $org->pages()->where('is_public', true)->whereNotIn('template', ['media', 'orders'])->get(['id', 'title', 'slug']);
 
-        return response()->view('site.mobile', ['page' => $page, 'org' => $org, 'others' => $others])
-            ->header('Cache-Control', 'public, max-age=60');
+        // Sprache: ?lang=en, sonst Browser-Sprache
+        $available = $page->availableLanguages();
+        $lang = $request->query('lang');
+        if ($lang !== 'de' && ! in_array($lang, $available, true)) {
+            $lang = \App\Support\Translations::fromBrowser($request->header('Accept-Language'), $available) ?? 'de';
+        }
+
+        return response()->view('site.mobile', [
+            'page' => $page->inLanguage($lang),
+            'org' => $org,
+            'others' => $others,
+            'lang' => $lang,
+            'available' => $available,
+            'ordering' => $org->ordering_enabled && $page->orderable && $page->template === 'list',
+        ])->header('Cache-Control', 'private, max-age=30')->header('Vary', 'Accept-Language');
     }
 
     /** Vollbild-Vorschau im Dashboard (nur eigene Seiten). */

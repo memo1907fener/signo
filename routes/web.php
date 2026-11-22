@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PublicPageController;
 use App\Http\Controllers\SiteController;
@@ -18,6 +19,14 @@ Route::redirect('/agb', '/rechtliches/agb');
 
 // Handy-Ansicht (QR-Code)
 Route::get('/m/{slug}', [PublicPageController::class, 'show'])->where('slug', '[a-z0-9]{6,16}')->name('public.page');
+
+// Bestellen per Handy
+Route::post('/m/{slug}/bestellen', [OrderController::class, 'store'])->where('slug', '[a-z0-9]{6,16}')->middleware('throttle:20,1')->name('order.store');
+Route::get('/bestellung/{code}', [OrderController::class, 'status'])->where('code', '[a-z0-9]{12}')->name('order.status');
+Route::get('/bestellung/{code}/status', [OrderController::class, 'statusJson'])->where('code', '[a-z0-9]{12}')->middleware('throttle:60,1')->name('order.status.json');
+Route::get('/abholung/{token}', [OrderController::class, 'board'])->name('board');
+Route::get('/abholung/{token}/status', [OrderController::class, 'boardJson'])->middleware('throttle:60,1')->name('board.json');
+Route::livewire('/kueche/{token}', Livewire\Orders::class)->name('kitchen');
 
 // ---------- Bildschirm ----------
 Route::get('/tv', [PlayerController::class, 'show'])->name('player');
@@ -66,6 +75,7 @@ Route::middleware(['auth', 'org'])->group(function () {
     Route::get('/inhalte/{page}/vorschau', [PublicPageController::class, 'preview'])->name('pages.preview');
     Route::livewire('/bildschirme', Livewire\Screens\Index::class)->name('screens.index');
     Route::livewire('/bildschirme/{screen}', Livewire\Screens\Edit::class)->name('screens.edit');
+    Route::livewire('/bestellungen', Livewire\Orders::class)->name('orders');
     Route::livewire('/konto', Livewire\Account::class)->name('account');
     Route::livewire('/admin', Livewire\Admin\Organizations::class)->name('admin');
 });

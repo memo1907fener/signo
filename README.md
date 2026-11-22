@@ -9,7 +9,17 @@ Der Kunde sieht nur drei Bereiche: **Inhalte**, **Bildschirme**, **Konto**.
 | --- | --- |
 | Inhalte | Seiten anlegen (KI-Import aus Foto/PDF/Text oder leere Vorlage), bearbeiten, QR-Code |
 | Bildschirme | Fernseher per 6-stelligem Code verbinden, Seiten wählen, Anzeigedauer, Betriebszeiten |
+| Bestellungen | Bestellen per QR-Code, Küchenansicht, Abholanzeige (für Gastro sichtbar, sonst nach dem Einschalten) |
 | Konto | Paket wählen (Stripe), Rechnungen, Firmendaten, Passwort, Konto löschen |
+
+Weitere Funktionen im Seiten-Editor:
+
+- **Schnell ändern:** Änderungswunsch sprechen oder tippen („Schnitzel 19,90, Gulasch streichen“), die KI
+  zeigt die Änderungen als Vorschau, ein Klick übernimmt sie.
+- **Weitere Sprachen:** bis zu 6 von 16 Sprachen je Seite. Die Handy-Seite wählt die Sprache des Gastes
+  automatisch, am Bildschirm können die Sprachen abwechseln. Geänderte Texte werden auf Knopfdruck nachübersetzt.
+- **Per Handy bestellbar:** Einträge mit Preis bekommen auf der Handy-Seite einen „+“-Knopf. Preise rechnet
+  immer der Server aus den gespeicherten Daten. Bezahlt wird vor Ort.
 
 Technik: Laravel 13, Livewire 4, Tailwind 4, MariaDB/MySQL, PHP 8.3+ (empfohlen 8.4).
 Die fertig gebauten Oberflächen-Dateien (`public/build`) liegen im Repository – auf dem Server
@@ -98,7 +108,7 @@ Ein Import kostet je nach Umfang wenige Cent (Modell `claude-sonnet-5-5`, Aufwan
 ## Zahlungen einschalten (Stripe)
 
 1. Im Stripe-Dashboard drei Produkte mit Preisen anlegen (Preise inkl. USt.):
-   - *QR & Web* – 90 € jährlich
+   - *QR & Web* – 29 € jährlich
    - *Bildschirm* – 19 € monatlich
    - *Mehrere Bildschirme* – 39 € monatlich
 2. Die Preis-IDs (`price_…`) in die `.env` eintragen: `STRIPE_PRICE_QR`, `STRIPE_PRICE_SCREEN`, `STRIPE_PRICE_MULTI`.
@@ -133,7 +143,10 @@ Die fertige APK nach `storage/app/signo.apk` hochladen – dann ist sie unter
 | `/inhalte`, `/bildschirme`, `/konto` | Kundenbereich |
 | `/admin` | Plattform-Verwaltung (nur Admins) |
 | `/tv` | Player für Fernseher und TV-Boxen |
-| `/m/{code}` | Handy-Ansicht einer Seite (QR-Code) |
+| `/m/{code}` | Handy-Ansicht einer Seite (QR-Code), `?lang=en` für eine Sprache, `?tisch=5` für Tischbestellung |
+| `/bestellungen` | Bestellungen und Einstellungen |
+| `/kueche/{link}` | Küchenbildschirm ohne Anmeldung (geheimer Link) |
+| `/abholung/{link}` | Abholanzeige mit Bestellnummern |
 
 ## Robustheit des Players
 

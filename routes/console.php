@@ -14,7 +14,8 @@ Artisan::command('signo:cleanup', function () {
         ->where(fn ($q) => $q->whereNull('last_seen_at')->orWhere('last_seen_at', '<', now()->subDay()))
         ->delete();
     $c = ScreenCommand::where('created_at', '<', now()->subDays(7))->delete();
-    $this->info("$n ungekoppelte Bildschirme und $c alte Befehle entfernt.");
+    $o = \App\Models\Order::where('created_at', '<', now()->subDays(90))->delete();
+    $this->info("$n ungekoppelte Bildschirme, $c alte Befehle und $o alte Bestellungen entfernt.");
 })->purpose('Alte, nie gekoppelte Bildschirme entfernen');
 
 // Erinnerung: 3 Tage vor Ende der Testphase und am Tag danach

@@ -41,6 +41,44 @@
                 </div>
             </div>
 
+
+            {{-- Ändern per Sprache --}}
+            @if ($t !== 'media' && $aiReady)
+                <div class="card p-5" x-data="signoVoice()">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 class="font-semibold">🎙️ Schnell ändern</h2>
+                            <p class="text-sm text-muted">Einfach sagen oder schreiben, z. B. „Schnitzel kostet jetzt 19,90, Gulasch streichen“.</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex gap-2">
+                        <button type="button" x-show="supported" @click="toggle()" class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg transition"
+                                :class="listening ? 'bg-brand text-white animate-pulse' : 'bg-sand hover:bg-ink hover:text-white'" :aria-label="listening ? 'Aufnahme stoppen' : 'Sprechen'">🎙️</button>
+                        <input wire:model="voiceText" x-ref="voiceInput" wire:keydown.enter="voiceRun" class="input" placeholder="Was soll sich ändern?">
+                        <button wire:click="voiceRun" class="btn-primary shrink-0" wire:loading.attr="disabled" wire:target="voiceRun">
+                            <span wire:loading.remove wire:target="voiceRun">Los</span>
+                            <span wire:loading wire:target="voiceRun">…</span>
+                        </button>
+                    </div>
+                    <p x-show="listening" class="hint">Ich höre zu … zum Beenden nochmal tippen.</p>
+                    @if ($voiceError) <p class="error mt-3">{{ $voiceError }}</p> @endif
+                    @if ($voicePreview)
+                        <div class="mt-4 rounded-2xl bg-paper p-4 ring-1 ring-black/5">
+                            <p class="text-sm font-semibold">Diese Änderungen werden übernommen:</p>
+                            <ul class="mt-2 space-y-1 text-sm">
+                                @foreach ($voicePreview['changes'] as $c)
+                                    <li class="flex gap-2"><span class="{{ ['add' => 'text-green-700', 'remove' => 'text-red-600', 'change' => 'text-ink'][$c['type']] ?? '' }}">{{ ['add' => '+', 'remove' => '−', 'change' => '✎'][$c['type']] ?? '•' }}</span><span>{{ $c['text'] }}</span></li>
+                                @endforeach
+                            </ul>
+                            <div class="mt-4 flex gap-2">
+                                <button wire:click="voiceApply" class="btn-brand btn-sm">Übernehmen</button>
+                                <button wire:click="voiceDiscard" class="btn-ghost btn-sm">Verwerfen</button>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             {{-- Inhalt --}}
             <div class="card space-y-5 p-5">
                 <h2 class="font-semibold">Inhalt</h2>
@@ -116,6 +154,8 @@
                     @include('livewire.pages.partials.image', ['key' => 'image', 'label' => 'Bild (optional)'])
                     <div><label class="label">Fußzeile</label><input {!! $live !!}="data.footer" class="input" placeholder="optional"></div>
 
+                @elseif ($t === 'orders')
+                    <p class="text-sm text-muted">Diese Seite zeigt automatisch die Bestellnummern „In Zubereitung“ und „Bitte abholen“. Sie wird von der Küche gesteuert – hier gibt es nichts einzutragen.</p>
                 @elseif ($t === 'media')
                     @include('livewire.pages.partials.image', ['key' => 'file', 'label' => 'Bild oder Video', 'media' => true])
                     <div class="flex flex-wrap items-center gap-4">
@@ -127,6 +167,62 @@
                     <div><label class="label">Beschriftung</label><input {!! $live !!}="data.caption" class="input" placeholder="optional"></div>
                 @endif
             </div>
+
+
+            {{-- Sprachen --}}
+            @if ($t !== 'media')
+                <div class="card p-5">
+                    <h2 class="font-semibold">🌍 Weitere Sprachen</h2>
+                    @if (! $aiReady)
+                        <p class="mt-1 text-sm text-muted">Automatische Übersetzungen sind verfügbar, sobald die KI eingerichtet ist.</p>
+                    @else
+                        <p class="mt-1 text-sm text-muted">Gäste sehen die Handy-Seite in ihrer Sprache. Preise bleiben gleich, übersetzt wird automatisch.</p>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            @foreach (\App\Support\Translations::LANGUAGES as $code => [$name, $short])
+                                <button wire:click="toggleLanguage('{{ $code }}')" wire:loading.attr="disabled" wire:target="toggleLanguage,translate"
+                                        class="rounded-full px-3 py-1.5 text-sm font-medium ring-1 transition {{ in_array($code, $languages) ? 'bg-ink text-white ring-ink' : 'bg-white ring-black/10 hover:ring-black/30' }}">{{ $name }}</button>
+                            @endforeach
+                        </div>
+                        <div class="mt-3 text-sm">
+                            <span wire:loading wire:target="toggleLanguage,translate" class="text-muted">Übersetze … (dauert ein paar Sekunden)</span>
+                            <span wire:loading.remove wire:target="toggleLanguage,translate">
+                                @if ($langMessage) <span class="{{ $langError ? 'text-red-600' : 'text-green-700' }}">{{ $langMessage }}</span> @endif
+                                @if ($languages && $missing > 0)
+                                    <span class="text-amber-700">{{ $missing }} geänderte {{ $missing === 1 ? 'Text ist' : 'Texte sind' }} noch nicht übersetzt.</span>
+                                    <button wire:click="translate" class="ml-1 font-semibold underline">Jetzt übersetzen</button>
+                                @endif
+                            </span>
+                        </div>
+                        @if ($languages)
+                            <label class="mt-4 flex items-center gap-2.5 text-sm">
+                                <input type="checkbox" wire:model.live="tvLanguages" class="h-4 w-4 accent-ink">
+                                Am Bildschirm alle Sprachen nacheinander zeigen
+                            </label>
+                        @endif
+                    @endif
+                </div>
+            @endif
+
+            {{-- Bestellen --}}
+            @if ($t === 'list')
+                <div class="card flex items-center justify-between gap-4 p-5">
+                    <div>
+                        <p class="font-semibold">🛎️ Per Handy bestellbar</p>
+                        @if ($org->ordering_enabled)
+                            <p class="text-sm text-muted">Gäste legen Einträge mit Preis in den Warenkorb und bestellen über den QR-Code.</p>
+                        @else
+                            <p class="text-sm text-muted">Zuerst unter <a href="{{ route('orders') }}" wire:navigate class="underline">Bestellungen</a> einschalten.</p>
+                        @endif
+                    </div>
+                    @if ($org->ordering_enabled)
+                        <label class="relative inline-flex cursor-pointer items-center">
+                            <input type="checkbox" wire:model.live="orderable" class="peer sr-only">
+                            <span class="h-7 w-12 rounded-full bg-black/15 transition peer-checked:bg-ink"></span>
+                            <span class="absolute left-1 h-5 w-5 rounded-full bg-white shadow transition peer-checked:translate-x-5"></span>
+                        </label>
+                    @endif
+                </div>
+            @endif
 
             <div class="card flex items-center justify-between gap-4 p-5">
                 <div>
@@ -146,6 +242,14 @@
             <div class="sg-stage aspect-video overflow-hidden rounded-3xl shadow-xl ring-1 ring-black/10">
                 @include('display.page', ['page' => $preview, 'mode' => 'tv'])
             </div>
+            @if ($page->availableLanguages())
+                <div class="mt-3 flex flex-wrap gap-1.5 text-xs">
+                    <button wire:click="$set('previewLang', 'de')" class="rounded-full px-2.5 py-1 font-semibold {{ $previewLang === 'de' ? 'bg-ink text-white' : 'bg-white ring-1 ring-black/10' }}">DE</button>
+                    @foreach ($page->availableLanguages() as $l)
+                        <button wire:click="$set('previewLang', '{{ $l }}')" class="rounded-full px-2.5 py-1 font-semibold {{ $previewLang === $l ? 'bg-ink text-white' : 'bg-white ring-1 ring-black/10' }}">{{ \App\Support\Translations::LANGUAGES[$l][1] }}</button>
+                    @endforeach
+                </div>
+            @endif
             <div class="mt-4 flex flex-wrap gap-2">
                 <a href="{{ route('pages.preview', $page) }}" target="_blank" class="btn-ghost btn-sm">Vollbild</a>
                 <a href="{{ route('pages.preview', ['page' => $page, 'portrait' => 1]) }}" target="_blank" class="btn-ghost btn-sm">Hochformat</a>

@@ -55,7 +55,7 @@
                 @endif
             @else
                 <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    @foreach (config('signo.templates') as $key => $t)
+                    @foreach (collect(config('signo.templates'))->reject(fn ($t) => $t['hidden'] ?? false) as $key => $t)
                         <button wire:click="create('{{ $key }}')" class="rounded-3xl bg-paper p-5 text-left ring-1 ring-black/5 transition hover:ring-ink">
                             <span class="block text-2xl">{{ ['list' => '📋', 'offer' => '🏷️', 'info' => 'ℹ️', 'media' => '🖼️'][$key] }}</span>
                             <span class="mt-3 block font-semibold">{{ $t['label'] }}</span>

@@ -4,7 +4,10 @@ namespace App\Livewire\Pages;
 
 use App\Livewire\Concerns\WithOrg;
 use App\Models\Page;
+use App\Services\AiImport;
+use App\Services\VoiceEdit;
 use App\Support\PageData;
+use App\Support\Translations;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
@@ -28,6 +31,22 @@ class Edit extends Component
     public $image = null;
     public ?string $savedAt = null;
 
+    // Sprachen
+    public array $languages = [];
+    public bool $tvLanguages = false;
+    public ?string $langMessage = null;
+    public bool $langError = false;
+
+    public string $previewLang = 'de';
+
+    // Bestellen
+    public bool $orderable = false;
+
+    // Ändern per Sprache
+    public string $voiceText = '';
+    public ?array $voicePreview = null;
+    public ?string $voiceError = null;
+
     public function mount(Page $page): void
     {
         abort_unless($page->organization_id === $this->org()->id, 404);
@@ -38,6 +57,9 @@ class Edit extends Component
         $this->font = $page->font;
         $this->isPublic = $page->is_public;
         $this->data = PageData::clean($page->template, $page->data);
+        $this->languages = $page->languages ?? [];
+        $this->tvLanguages = $page->tv_languages;
+        $this->orderable = $page->orderable;
     }
 
     protected function page(): Page
@@ -48,7 +70,7 @@ class Edit extends Component
     /** Jede Änderung wird sofort gespeichert. */
     public function updated($name): void
     {
-        if ($name === 'image') return;
+        if (in_array($name, ['image', 'voiceText', 'previewLang'], true)) return;
         $this->persist();
     }
 
@@ -65,9 +87,70 @@ class Edit extends Component
             'accent' => $this->accent,
             'font' => $this->font,
             'is_public' => $this->isPublic,
+            'tv_languages' => $this->tvLanguages,
+            'orderable' => $this->orderable && $page->template === 'list',
             'data' => PageData::clean($page->template, $this->data),
         ]);
         $this->savedAt = now()->format('H:i:s');
+    }
+
+    // ---------- Sprachen ----------
+    public function toggleLanguage(string $code): void
+    {
+        if (! array_key_exists($code, Translations::LANGUAGES)) return;
+        $this->languages = in_array($code, $this->languages, true)
+            ? array_values(array_diff($this->languages, [$code]))
+            : array_merge($this->languages, [$code]);
+        if (count($this->languages) > 6) {
+            array_pop($this->languages);
+            $this->langError = true;
+            $this->langMessage = 'Höchstens 6 Sprachen je Seite.';
+            return;
+        }
+        $this->page()->update(['languages' => $this->languages]);
+        $this->translate();
+    }
+
+    public function translate(): void
+    {
+        $this->langMessage = null; $this->langError = false;
+        $page = $this->page();
+        try {
+            Translations::translate($this->org(), $page);
+            $this->langMessage = $this->languages ? 'Übersetzung aktuell.' : null;
+        } catch (\Throwable $e) {
+            report($e);
+            $this->langError = true;
+            $this->langMessage = $e instanceof \RuntimeException ? $e->getMessage() : 'Übersetzung fehlgeschlagen.';
+        }
+    }
+
+    // ---------- Ändern per Sprache ----------
+    public function voiceRun(): void
+    {
+        $this->voiceError = null; $this->voicePreview = null;
+        try {
+            $r = VoiceEdit::run($this->page(), $this->voiceText);
+            $this->voicePreview = $r;
+        } catch (\Throwable $e) {
+            report($e);
+            $this->voiceError = $e instanceof \RuntimeException ? $e->getMessage() : 'Das hat nicht geklappt. Bitte erneut versuchen.';
+        }
+    }
+
+    public function voiceApply(): void
+    {
+        if (! $this->voicePreview) return;
+        $this->data = PageData::clean($this->page()->template, $this->voicePreview['data']);
+        $this->voicePreview = null;
+        $this->voiceText = '';
+        $this->persist();
+        if ($this->languages) $this->translate();
+    }
+
+    public function voiceDiscard(): void
+    {
+        $this->voicePreview = null;
     }
 
     // ---------- Listen ----------
@@ -186,7 +269,12 @@ class Edit extends Component
             'data' => PageData::clean($page->template, $this->data),
         ]);
 
-        return view('livewire.pages.edit', ['page' => $page, 'preview' => $preview])
+        $org = $this->org();
+        return view('livewire.pages.edit', [
+            'page' => $page, 'preview' => $preview, 'org' => $org,
+            'aiReady' => AiImport::available(),
+            'missing' => $page->languages ? Translations::missingCount($page) : 0,
+        ])
             ->title($this->title);
     }
 }

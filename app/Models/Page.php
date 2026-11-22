@@ -9,13 +9,20 @@ use Illuminate\Support\Str;
 
 class Page extends Model
 {
-    protected $fillable = ['organization_id', 'title', 'template', 'theme', 'accent', 'font', 'data', 'slug', 'is_public', 'position'];
+    protected $fillable = [
+        'organization_id', 'title', 'template', 'theme', 'accent', 'font', 'data', 'slug', 'is_public', 'position',
+        'languages', 'translations', 'translated_hash', 'tv_languages', 'orderable',
+    ];
 
     protected function casts(): array
     {
         return [
             'data' => 'array',
             'is_public' => 'boolean',
+            'languages' => 'array',
+            'translations' => 'array',
+            'tv_languages' => 'boolean',
+            'orderable' => 'boolean',
         ];
     }
 
@@ -55,9 +62,30 @@ class Page extends Model
         return '/storage/' . ltrim($path, '/');
     }
 
+    /** Diese Seite in einer anderen Sprache (Übersetzung über die Originaldaten gelegt). */
+    public function inLanguage(?string $lang): Page
+    {
+        if (! $lang || $lang === 'de' || empty($this->translations[$lang])) return $this;
+        $copy = clone $this;
+        $copy->data = \App\Support\Translations::apply($this->template, $this->data ?? [], $this->translations[$lang]);
+        $copy->setAttribute('lang', $lang);
+        return $copy;
+    }
+
+    /** Sprachen mit fertiger Übersetzung. */
+    public function availableLanguages(): array
+    {
+        return array_values(array_filter($this->languages ?? [], fn ($l) => ! empty($this->translations[$l])));
+    }
+
+    public function translationsOutdated(): bool
+    {
+        return ! empty($this->languages) && \App\Support\Translations::missingCount($this) > 0;
+    }
+
     /** Prüfsumme für den Player: ändert sich bei jeder Bearbeitung. */
     public function revision(): string
     {
-        return substr(md5($this->id . '|' . $this->updated_at?->timestamp . '|' . json_encode($this->data) . $this->theme . $this->accent . $this->font), 0, 12);
+        return substr(md5($this->id . '|' . $this->updated_at?->timestamp . '|' . json_encode($this->data) . json_encode($this->translations) . (int) $this->tv_languages . $this->theme . $this->accent . $this->font), 0, 12);
     }
 }

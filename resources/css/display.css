@@ -171,3 +171,11 @@
 .sg-mobile .sg-media { position: relative; min-height: 100vh; }
 .sg-mobile .sg-huge { font-size: 52px; }
 .sg-mobile .sg-price span { font-size: 64px; }
+
+/* ---------- Bestellen (Handy) ---------- */
+.sg-add {
+    flex: 0 0 auto; width: 30px; height: 30px; border-radius: 99px; border: 0; cursor: pointer;
+    background: var(--accent); color: #fff; font-size: 20px; font-weight: 700; line-height: 30px; text-align: center;
+    margin-left: 4px; align-self: center;
+}
+.sg-t-orders .sg-fit { padding: 0 !important; }

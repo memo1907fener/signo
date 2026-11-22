@@ -93,15 +93,24 @@ class PlayerController extends Controller
 
         $pages = $screen->show_all ? $org->pages()->get() : $screen->pages()->where('organization_id', $org->id)->get();
 
-        $out = $pages->map(fn (Page $p) => [
-            'id' => $p->id,
-            'revision' => $p->revision(),
-            'html' => view('display.page', ['page' => $p, 'mode' => 'tv'])->render(),
-            'media' => array_values(array_filter([
-                Page::fileUrl($p->data['image'] ?? null),
-                Page::fileUrl($p->data['file'] ?? null),
-            ])),
-        ])->values();
+        // Jede Seite; bei "Sprachen abwechseln" zusätzlich jede Übersetzung als eigene Szene
+        $out = collect();
+        foreach ($pages as $p) {
+            $variants = ['de'];
+            if ($p->tv_languages) $variants = array_merge($variants, $p->availableLanguages());
+            foreach ($variants as $lang) {
+                $v = $p->inLanguage($lang);
+                $out->push([
+                    'id' => $p->id . ($lang === 'de' ? '' : '-' . $lang),
+                    'revision' => $p->revision() . $lang,
+                    'html' => view('display.page', ['page' => $v, 'mode' => 'tv'])->render(),
+                    'media' => array_values(array_filter([
+                        Page::fileUrl($p->data['image'] ?? null),
+                        Page::fileUrl($p->data['file'] ?? null),
+                    ])),
+                ]);
+            }
+        }
 
         return response()->json([
             'status' => 'active',

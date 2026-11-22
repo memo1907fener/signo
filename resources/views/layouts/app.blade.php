@@ -13,6 +13,9 @@
         ['route' => 'screens.index', 'match' => 'screens.*', 'label' => 'Bildschirme'],
         ['route' => 'account', 'match' => 'account*', 'label' => 'Konto'],
     ];
+    if ($org && ($org->ordering_enabled || $org->industry === 'gastro')) {
+        array_splice($nav, 2, 0, [['route' => 'orders', 'match' => 'orders', 'label' => 'Bestellungen']]);
+    }
     if ($user?->is_admin) $nav[] = ['route' => 'admin', 'match' => 'admin*', 'label' => 'Admin'];
 @endphp
 

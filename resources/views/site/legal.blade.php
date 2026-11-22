@@ -43,6 +43,9 @@
         <p><strong>Hosting:</strong> Unsere Server werden von einem Hosting-Dienstleister betrieben, mit dem ein Auftragsverarbeitungsvertrag besteht.</p>
         <p><strong>Zahlungen:</strong> Stripe Payments Europe Ltd., Dublin, Irland. Zahlungsdaten werden direkt bei Stripe eingegeben und nicht auf unseren Servern gespeichert.</p>
         <p><strong>KI-Import:</strong> Wenn Sie die Funktion „Mit KI erstellen“ nutzen, wird die hochgeladene Datei bzw. der Text an Anthropic PBC (USA) übermittelt, um die Inhalte auszulesen. Die Übermittlung erfolgt auf Grundlage der EU-Standardvertragsklauseln. Laden Sie dort bitte keine personenbezogenen Daten Dritter hoch. Ohne diese Funktion findet keine Übermittlung statt.</p>
+        <p><strong>Übersetzungen und „Schnell ändern“:</strong> Wenn Sie Seiten übersetzen lassen oder Änderungen per Text/Sprache beauftragen, werden die Texte der Seite an Anthropic PBC (USA) übermittelt. Bei der Spracheingabe wandelt Ihr Browser die Sprache in Text um (je nach Browser über Google oder Apple); Signo erhält nur den Text.</p>
+        <h2>Bestellungen von Gästen</h2>
+        <p>Bestellt ein Gast über die Handy-Seite eines Betriebs, verarbeiten wir die Bestellung (Gerichte, angegebener Name oder Tischnummer, Anmerkung, IP-Adresse zum Schutz vor Missbrauch) im Auftrag dieses Betriebs. Verantwortlich ist der jeweilige Betrieb. Bestellungen werden nach 90 Tagen gelöscht.</p>
         <p><strong>E-Mail-Versand:</strong> Systemnachrichten (z. B. Passwort zurücksetzen) werden über unseren E-Mail-Anbieter versendet.</p>
         <h2>Speicherdauer</h2>
         <p>Wir speichern Ihre Daten, solange Ihr Konto besteht. Wenn Sie Ihr Konto löschen, werden Inhalte, Bilder und Bildschirme sofort gelöscht. Rechnungsdaten bewahren wir gemäß den gesetzlichen Aufbewahrungsfristen (7 Jahre) auf.</p>

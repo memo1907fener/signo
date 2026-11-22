@@ -10,6 +10,7 @@ class Organization extends Model
     protected $fillable = [
         'name', 'industry', 'plan', 'trial_ends_at', 'subscription_status', 'subscription_ends_at',
         'stripe_customer_id', 'stripe_subscription_id', 'locked_at', 'lock_reason', 'signup_ip', 'reminder_stage',
+        'ordering_enabled', 'ordering_mode', 'ordering_note', 'kitchen_token',
     ];
 
     protected function casts(): array
@@ -18,11 +19,13 @@ class Organization extends Model
             'trial_ends_at' => 'datetime',
             'subscription_ends_at' => 'datetime',
             'locked_at' => 'datetime',
+            'ordering_enabled' => 'boolean',
         ];
     }
 
     public function users(): HasMany { return $this->hasMany(User::class); }
     public function pages(): HasMany { return $this->hasMany(Page::class)->orderBy('position')->orderBy('id'); }
+    public function orders(): HasMany { return $this->hasMany(Order::class); }
     public function screens(): HasMany { return $this->hasMany(Screen::class)->orderBy('name'); }
 
     public function hasSubscription(): bool

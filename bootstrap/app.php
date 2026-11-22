@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // aaPanel: nginx/Apache als Proxy vor PHP
         $middleware->trustProxies(at: array_filter(explode(',', (string) env('TRUSTED_PROXIES', '127.0.0.1,::1'))));
-        $middleware->preventRequestForgery(except: ['api/player/*', 'stripe/webhook']);
+        $middleware->preventRequestForgery(except: ['api/player/*', 'stripe/webhook', 'm/*/bestellen']);
         $middleware->alias(['org' => \App\Http\Middleware\EnsureOrganization::class]);
         $middleware->redirectGuestsTo(fn () => route('login'));
         $middleware->redirectUsersTo(fn () => route('pages.index'));
