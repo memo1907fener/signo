@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Signo</string>
+    <string name="service_running">Player aktiv</string>
+    <string name="admin_description">Ermöglicht die Verwaltung dieses Bildschirms als gesperrtes Anzeigegerät.</string>
+</resources>

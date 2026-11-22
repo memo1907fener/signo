@@ -1,0 +1,53 @@
+<?php
+
+return [
+    'accepted' => 'Bitte bestätigen Sie :attribute.',
+    'array' => ':attribute muss eine Liste sein.',
+    'boolean' => ':attribute muss ja oder nein sein.',
+    'email' => 'Bitte geben Sie eine gültige E-Mail-Adresse ein.',
+    'file' => ':attribute muss eine Datei sein.',
+    'image' => ':attribute muss ein Bild sein.',
+    'in' => 'Die Auswahl für :attribute ist ungültig.',
+    'integer' => ':attribute muss eine ganze Zahl sein.',
+    'max' => [
+        'numeric' => ':attribute darf höchstens :max sein.',
+        'file' => ':attribute darf höchstens :max Kilobyte groß sein.',
+        'string' => ':attribute darf höchstens :max Zeichen haben.',
+        'array' => ':attribute darf höchstens :max Einträge haben.',
+    ],
+    'mimes' => ':attribute muss vom Typ :values sein.',
+    'mimetypes' => ':attribute muss vom Typ :values sein.',
+    'min' => [
+        'numeric' => ':attribute muss mindestens :min sein.',
+        'file' => ':attribute muss mindestens :min Kilobyte groß sein.',
+        'string' => ':attribute braucht mindestens :min Zeichen.',
+        'array' => ':attribute braucht mindestens :min Einträge.',
+    ],
+    'numeric' => ':attribute muss eine Zahl sein.',
+    'regex' => 'Das Format von :attribute ist ungültig.',
+    'required' => 'Bitte füllen Sie :attribute aus.',
+    'size' => [
+        'string' => ':attribute muss genau :size Zeichen haben.',
+    ],
+    'string' => ':attribute muss ein Text sein.',
+    'unique' => ':attribute ist bereits vergeben.',
+    'uploaded' => ':attribute konnte nicht hochgeladen werden.',
+
+    'attributes' => [
+        'email' => 'E-Mail-Adresse',
+        'password' => 'Passwort',
+        'name' => 'Name',
+        'company' => 'Name des Betriebs',
+        'industry' => 'Branche',
+        'code' => 'Code',
+        'seconds' => 'Anzeigedauer',
+        'onTime' => 'Startzeit',
+        'offTime' => 'Endzeit',
+        'upload' => 'Datei',
+        'image' => 'Datei',
+        'text' => 'Text',
+        'currentPassword' => 'aktuelles Passwort',
+        'newPassword' => 'neues Passwort',
+        'terms' => 'die AGB',
+    ],
+];
