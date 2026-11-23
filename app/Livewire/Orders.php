@@ -89,7 +89,7 @@ class Orders extends Component
             'is_public' => false,
             'position' => (int) $org->pages()->max('position') + 1,
         ]);
-        session()->flash('ok', 'Die Seite „Abholanzeige“ wurde angelegt. Wählen Sie sie bei einem Bildschirm aus.');
+        session()->flash('ok', __('Die Seite „Abholanzeige“ wurde angelegt. Wählen Sie sie bei einem Bildschirm aus.'));
         return $this->redirectRoute('pages.index', navigate: true);
     }
 

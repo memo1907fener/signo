@@ -113,7 +113,8 @@ class AiImport
            . "- Übernimm Namen, Beschreibungen und Preise exakt. Erfinde nichts dazu, lasse nichts weg.\n"
            . "- Preise im österreichischen Format ohne Währungszeichen, z. B. \"12,90\". Steht \"ab\" davor, behalte es.\n"
            . "- Gruppiere Einträge in sections mit passender Überschrift, wenn die Vorlage Gruppen hat.\n"
-           . "- Allergen-Buchstaben dürfen in der Beschreibung bleiben.\n"
+           . "- Stehen bei einem Eintrag Allergen-Buchstaben (A, B, C, D, E, F, G, H, L, M, N, O, P, R), trage sie in allergens ein und entferne sie aus Name und Beschreibung. Nichts raten: ohne Angabe bleibt allergens leer.\n"
+           . "- marks nur setzen, wenn es ausdrücklich dabeisteht: vegan, veg (vegetarisch), hot (scharf), halal, bio, new (neu).\n"
            . "- Sprache der Vorlage beibehalten. Korrigiere offensichtliche Tippfehler.\n"
            . "- title = kurzer interner Name für die Seite, z. B. \"Speisekarte\".\n"
            . "- Nicht benutzte Felder als leere Zeichenkette bzw. leere Liste.\n"
@@ -150,8 +151,10 @@ class AiImport
                                 'type' => 'array',
                                 'items' => [
                                     'type' => 'object',
-                                    'properties' => ['name' => $str, 'description' => $str, 'price' => $str],
-                                    'required' => ['name', 'description', 'price'],
+                                    'properties' => ['name' => $str, 'description' => $str, 'price' => $str,
+                                        'allergens' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => array_keys(config('signo.allergens'))]],
+                                        'marks' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => array_keys(config('signo.marks'))]]],
+                                    'required' => ['name', 'description', 'price', 'allergens', 'marks'],
                                     'additionalProperties' => false,
                                 ],
                             ],
@@ -189,6 +192,7 @@ class AiImport
                         'name' => trim((string) ($i['name'] ?? '')),
                         'description' => trim((string) ($i['description'] ?? '')),
                         'price' => trim((string) ($i['price'] ?? '')),
+                        'tags' => \App\Support\PageData::tags(array_merge((array) ($i['allergens'] ?? []), (array) ($i['marks'] ?? []))),
                     ])->values()->all(),
                 ])->values()->all() ?: [['title' => '', 'items' => [['name' => '', 'description' => '', 'price' => '']]]],
                 'footer' => $s('footer'),

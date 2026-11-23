@@ -9,8 +9,11 @@ Der Kunde sieht nur drei Bereiche: **Inhalte**, **Bildschirme**, **Konto**.
 | --- | --- |
 | Inhalte | Seiten anlegen (KI-Import aus Foto/PDF/Text oder leere Vorlage), bearbeiten, QR-Code |
 | Bildschirme | Fernseher per 6-stelligem Code verbinden, Seiten wählen, Anzeigedauer, Betriebszeiten |
+| Bildschirme | … außerdem **Eilmeldung** für alle Bildschirme und **Ausfall-Alarm** per E-Mail |
 | Bestellungen | Bestellen per QR-Code, Küchenansicht, Abholanzeige (für Gastro sichtbar, sonst nach dem Einschalten) |
-| Konto | Paket wählen (Stripe), Rechnungen, Standorte, Team einladen, Firmendaten, Passwort, Standort löschen |
+| Gäste | Feedback per QR-Code (mit Link zu Google-Bewertungen), digitale Stempelkarte |
+| Statistik | QR-Aufrufe, Bestellungen, Umsatz, beliebteste Gerichte, Laufzeit der Bildschirme |
+| Konto | Paket wählen (Stripe), Rechnungen, Standorte, Team einladen, **Marke** (Logo & Farbe), Sprache, Passwort, Standort löschen |
 
 Weitere Funktionen im Seiten-Editor:
 
@@ -21,6 +24,14 @@ Weitere Funktionen im Seiten-Editor:
 - **Zeitplan:** Seite nur an bestimmten Tagen, Uhrzeiten oder in einem Zeitraum zeigen.
 - **Laufschrift** am unteren Bildschirmrand; neue Seitentypen **Uhr & Wetter** und **Countdown**.
 - **Texte vorschlagen** (KI) und **Fotobibliothek** (Pexels, Schlüssel `PEXELS_API_KEY` in der `.env`).
+- **Allergene & Kennzeichen** je Eintrag (14 Allergene, vegan, vegetarisch, scharf, halal, bio, neu) mit Legende am Bildschirm
+  und Filter auf der Handy-Seite. Der KI-Import liest Allergen-Buchstaben mit.
+- **Heute aus:** Eintrag für den laufenden Tag als ausverkauft markieren (auch per Sprache: „Schnitzel ist aus“).
+- **Happy Hour & Zeitpreise:** Aktionspreis je Eintrag, gilt im eingestellten Zeitfenster – auch beim Bestellen.
+- **Wochenmenü** (eigener Seitentyp): Gerichte je Wochentag, der Bildschirm zeigt automatisch den heutigen Tag oder die ganze Woche.
+- **Sechs Designs:** Modern, Elegant, Bistro, Kreidetafel, Minimal, Neon – jeweils hell und dunkel.
+- **Export:** jede Seite als Bild für Instagram (Beitrag, Story, Quadrat), als A4-Aushang und als Tischaufsteller mit QR-Code
+  (Bild-Download oder Druck/PDF über den Browser).
 - **Per Handy bestellbar:** Einträge mit Preis bekommen auf der Handy-Seite einen „+“-Knopf. Preise rechnet
   immer der Server aus den gespeicherten Daten. Bezahlt wird vor Ort.
 
@@ -83,7 +94,8 @@ aaPanel → **Cron** → *Shell Script*, jede Minute:
 cd /www/wwwroot/signo.at && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Damit laufen: Erinnerungs-Mails vor Ende der Testphase und das nächtliche Aufräumen.
+Damit laufen: Erinnerungs-Mails vor Ende der Testphase, der Ausfall-Alarm für Bildschirme (alle 5 Minuten)
+und das nächtliche Aufräumen. Für Erinnerungen und Alarm müssen die `MAIL_…`-Zugangsdaten in der `.env` stehen.
 
 ### 5. Testen
 
@@ -125,6 +137,13 @@ Ein Import kostet je nach Umfang wenige Cent (Modell `claude-sonnet-5-5`, Aufwan
 
 Preise und Paketinhalte, die auf der Website stehen, werden in `config/signo.php` gepflegt.
 
+## Sprachen der Oberfläche
+
+Kundenbereich und Startseite gibt es auf Deutsch, Englisch und Türkisch. Die Sprache folgt dem Browser,
+lässt sich im Fuß der Startseite und unter **Konto** umstellen und wird je Benutzer gespeichert.
+Die Übersetzungen liegen in `lang/en.json` und `lang/tr.json` (Schlüssel = deutscher Text).
+Deutsch bleiben: Impressum/Datenschutz/AGB, der Admin-Bereich und die Texte am Fernseher beim Verbinden.
+
 ## Updates einspielen
 
 ```bash
@@ -150,6 +169,10 @@ Die fertige APK nach `storage/app/signo.apk` hochladen – dann ist sie unter
 | `/bestellungen` | Bestellungen und Einstellungen |
 | `/kueche/{link}` | Küchenbildschirm ohne Anmeldung (geheimer Link) |
 | `/abholung/{link}` | Abholanzeige mit Bestellnummern |
+| `/gaeste`, `/statistik` | Feedback & Stempelkarte, Auswertungen |
+| `/f/{code}` | Feedback-Seite für Gäste |
+| `/s/{code}`, `/karte/{nummer}` | Stempelkarte: Einstieg per QR-Code und Karte des Gastes |
+| `/inhalte/{id}/export` | Export für Druck & Social Media |
 
 ## Robustheit des Players
 

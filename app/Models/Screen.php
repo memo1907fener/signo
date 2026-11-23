@@ -69,18 +69,18 @@ class Screen extends Model
 
     public function statusLabel(): string
     {
-        if (! $this->last_seen_at) return 'Noch nie verbunden';
-        if (! $this->isOnline()) return 'Offline seit ' . $this->last_seen_at->diffForHumans(null, true);
-        if ($this->isSleeping()) return 'Ruhezeit';
+        if (! $this->last_seen_at) return __('Noch nie verbunden');
+        if (! $this->isOnline()) return __('Offline seit :time', ['time' => $this->last_seen_at->diffForHumans(null, true)]);
+        if ($this->isSleeping()) return __('Ruhezeit');
         return 'Online';
     }
 
     public function hoursLabel(): string
     {
-        if ($this->always_on || ! $this->on_time) return 'Immer an';
+        if ($this->always_on || ! $this->on_time) return __('Immer an');
         $names = [1 => 'Mo', 2 => 'Di', 3 => 'Mi', 4 => 'Do', 5 => 'Fr', 6 => 'Sa', 7 => 'So'];
         $days = $this->days ?: [1, 2, 3, 4, 5, 6, 7];
-        $d = count($days) === 7 ? 'täglich' : implode(', ', array_map(fn ($x) => $names[$x] ?? $x, $days));
+        $d = count($days) === 7 ? __('täglich') : implode(', ', array_map(fn ($x) => $names[$x] ?? $x, $days));
         return "{$this->on_time}–{$this->off_time} · $d";
     }
 }

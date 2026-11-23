@@ -44,7 +44,7 @@ class AcceptInvitation extends Component
                 return $this->redirectRoute('login', navigate: false);
             }
             $this->validate(['name' => 'required|string|max:120', 'password' => 'required|string|min:8'], [
-                'name.required' => 'Bitte Ihren Namen eingeben.', 'password.min' => 'Mindestens 8 Zeichen.',
+                'name.required' => __('Bitte Ihren Namen eingeben.'), 'password.min' => __('Mindestens 8 Zeichen.'),
             ]);
             $user = User::create(['name' => $this->name, 'email' => $inv->email, 'password' => $this->password, 'organization_id' => $inv->organization_id]);
             Auth::login($user, true);

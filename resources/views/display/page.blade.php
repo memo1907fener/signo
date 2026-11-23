@@ -5,9 +5,15 @@
     $img = fn ($p) => \App\Models\Page::fileUrl($p);
     $ordering = $ordering ?? false;
     $orderPrice = fn ($p) => $ordering ? \App\Models\Order::parsePrice($p) : null;
+    $L = $page->lang ?? 'de';
+    $ui = \App\Support\Ui::mobile($L);
+    $tagLabels = \App\Support\Ui::tagLabels($L);
+    $brandOrg = $page->organization;
+    $logo = $brandOrg && $brandOrg->showsLogo() && $mode === 'tv' ? $brandOrg->logoUrl() : null;
+    $legendTags = ! empty($d['legend']) ? array_values(array_filter($page->usedTags(), fn ($t) => strlen($t) === 1)) : [];
 @endphp
 <div class="sg-page sg-{{ $mode }} sg-theme-{{ $page->theme }} sg-font-{{ $page->font }} sg-t-{{ $page->template }} {{ ! empty($d['ticker']) && $mode === 'tv' ? 'sg-has-ticker' : '' }}"
-     style="--accent: {{ $page->accentColor() }};" data-revision="{{ $page->revision() }}">
+     style="--accent: {{ $page->accentColor() }}; --bg: {{ $page->colors()[0] }}; --fg: {{ $page->colors()[1] }};" data-revision="{{ $page->revision() }}">
     <div class="sg-fit">
 
     @if ($page->template === 'list')
@@ -20,10 +26,14 @@
             $count = $sections->sum(fn ($s) => count($s['items']) + (trim($s['title'] ?? '') !== '' ? 1.5 : 0));
             $cols = $count > 16 ? 3 : ($count > 7 ? 2 : 1);
         @endphp
-        <header class="sg-head">
+        <header class="sg-head {{ $logo ? 'sg-with-logo' : '' }}">
+            @if ($logo)<img class="sg-logo" src="{{ $logo }}" alt="">@endif
             <h1 class="sg-h1">{{ $d['heading'] ?? '' }}</h1>
             @if (! empty($d['subheading']))
                 <p class="sg-sub">{{ $d['subheading'] }}</p>
+            @endif
+            @if ($page->happyActive())
+                <span class="sg-kicker sg-happy-badge">{{ $d['happy']['label'] ?? 'Happy Hour' }} · {{ $ui['until'] }} {{ $d['happy']['end'] }}</span>
             @endif
         </header>
         <div class="sg-list" style="--cols: {{ $cols }}">
@@ -33,26 +43,59 @@
                         <h2 class="sg-h2">{{ $s['title'] }}</h2>
                     @endif
                     @foreach ($s['items'] as $it)
-                        <div class="sg-item">
-                            <div class="sg-item-row">
-                                <span class="sg-item-name">{{ $it['name'] ?? '' }}</span>
-                                <span class="sg-dots"></span>
-                                <span class="sg-item-price">{{ $it['price'] ?? '' }}</span>
-                                @if ($cents = $orderPrice($it['price'] ?? ''))
-                                    <button type="button" class="sg-add" @click="add({{ $it['_s'] }}, {{ $it['_i'] }}, @js($it['name'] ?? ''), {{ $cents }})" aria-label="In den Warenkorb">+</button>
-                                @endif
-                            </div>
-                            @if (! empty($it['description']))
-                                <div class="sg-item-desc">{{ $it['description'] }}</div>
-                            @endif
-                        </div>
+                        @include('display.item')
                     @endforeach
                 </section>
             @endforeach
         </div>
-        @if (! empty($d['footer']))
-            <footer class="sg-foot">{{ $d['footer'] }}</footer>
+        @include('display.foot')
+
+    @elseif ($page->template === 'week')
+        @php
+            $todayIdx = now()->timezone(config('app.timezone'))->dayOfWeekIso - 1;
+            $days = collect($d['days'] ?? [])->map(function ($day, $n) {
+                $day['n'] = $n;
+                $day['items'] = collect($day['items'] ?? [])->filter(fn ($i) => trim($i['name'] ?? '') !== '')->values()->all();
+                return $day;
+            })->filter(fn ($day) => count($day['items']))->values();
+            $today = $days->firstWhere('n', $todayIdx);
+            $single = $mode === 'tv' && ($d['view'] ?? 'today') === 'today' && $today;
+        @endphp
+        <header class="sg-head {{ $logo ? 'sg-with-logo' : '' }}">
+            @if ($logo)<img class="sg-logo" src="{{ $logo }}" alt="">@endif
+            <h1 class="sg-h1">{{ $d['heading'] ?? '' }}</h1>
+            @if ($single)
+                <p class="sg-sub">{{ $ui['today'] }}, {{ \App\Support\Ui::weekday($todayIdx, $L) }}{{ ! empty($d['subheading']) ? ' · ' . $d['subheading'] : '' }}</p>
+            @elseif (! empty($d['subheading']))
+                <p class="sg-sub">{{ $d['subheading'] }}</p>
+            @endif
+            @if (! empty($d['price']))
+                <span class="sg-kicker sg-happy-badge">{{ $ui['menu'] }} {{ $d['price'] }}</span>
+            @endif
+        </header>
+        @if ($days->isEmpty())
+            <p class="sg-text">{{ $ui['no_menu'] }}</p>
+        @elseif ($single)
+            <div class="sg-list sg-week-today" style="--cols: 1">
+                <section class="sg-section">
+                    @foreach ($today['items'] as $it)
+                        @include('display.item')
+                    @endforeach
+                </section>
+            </div>
+        @else
+            <div class="sg-week" style="--days: {{ $days->count() }}">
+                @foreach ($days as $day)
+                    <section class="sg-day {{ $day['n'] === $todayIdx ? 'sg-day-today' : '' }}">
+                        <h2 class="sg-h2">{{ \App\Support\Ui::weekday($day['n'], $L) }}@if ($day['n'] === $todayIdx)<span class="sg-day-flag">{{ $ui['today'] }}</span>@endif</h2>
+                        @foreach ($day['items'] as $it)
+                            @include('display.item')
+                        @endforeach
+                    </section>
+                @endforeach
+            </div>
         @endif
+        @include('display.foot')
 
     @elseif ($page->template === 'offer')
         <div class="sg-split {{ empty($d['image']) ? 'sg-noimg' : '' }}">

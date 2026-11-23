@@ -33,7 +33,7 @@ class Index extends Component
             'title' => config("signo.templates.$template.label"),
             'template' => $template,
             'theme' => 'light',
-            'accent' => 'coral',
+            'accent' => $org->brandAccent() ? 'brand' : 'coral',
             'data' => Starter::blank($template),
             'position' => (int) $org->pages()->max('position') + 1,
         ]);
@@ -47,11 +47,11 @@ class Index extends Component
             'upload' => 'nullable|file|max:15360|mimes:jpg,jpeg,png,webp,pdf',
             'text' => 'nullable|string|max:20000',
         ], [
-            'upload.mimes' => 'Bitte ein Foto (JPG, PNG) oder ein PDF hochladen.',
-            'upload.max' => 'Die Datei ist größer als 15 MB.',
+            'upload.mimes' => __('Bitte ein Foto (JPG, PNG) oder ein PDF hochladen.'),
+            'upload.max' => __('Die Datei ist größer als 15 MB.'),
         ]);
         if (! $this->upload && trim($this->text) === '') {
-            $this->aiError = 'Bitte ein Foto oder PDF hochladen oder Text einfügen.';
+            $this->aiError = __('Bitte ein Foto oder PDF hochladen oder Text einfügen.');
             return;
         }
 
@@ -59,7 +59,7 @@ class Index extends Component
         try {
             $r = AiImport::run($org, $this->upload, $this->text);
         } catch (\Throwable $e) {
-            $this->aiError = $e instanceof \RuntimeException ? $e->getMessage() : 'Unerwarteter Fehler beim KI-Import.';
+            $this->aiError = $e instanceof \RuntimeException ? $e->getMessage() : __('Unerwarteter Fehler beim KI-Import.');
             report($e);
             return;
         }
@@ -69,12 +69,12 @@ class Index extends Component
             'title' => $r['title'],
             'template' => $r['template'],
             'theme' => $org->industry === 'gastro' ? 'dark' : 'light',
-            'accent' => $org->industry === 'gastro' ? 'gold' : 'coral',
+            'accent' => $org->brandAccent() ? 'brand' : ($org->industry === 'gastro' ? 'gold' : 'coral'),
             'font' => $org->industry === 'gastro' ? 'elegant' : 'modern',
             'data' => $r['data'],
             'position' => (int) $org->pages()->max('position') + 1,
         ]);
-        session()->flash('ok', 'Fertig! Bitte kurz prüfen, ob alles stimmt.');
+        session()->flash('ok', __('Fertig! Bitte kurz prüfen, ob alles stimmt.'));
         return $this->redirectRoute('pages.edit', $page, navigate: true);
     }
 

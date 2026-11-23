@@ -17,6 +17,15 @@ class PublicPageController extends Controller
             return response()->view('site.paused', ['org' => $org], 503);
         }
 
+        // Statistik: Aufruf zählen (keine Suchmaschinen, keine Vorschauen von Messengern)
+        if (! preg_match('/bot|crawl|spider|preview|facebookexternalhit|whatsapp|slurp/i', (string) $request->userAgent())) {
+            try {
+                $day = now()->timezone(config('app.timezone'))->format('Y-m-d');
+                $n = \Illuminate\Support\Facades\DB::table('page_views')->where('page_id', $page->id)->where('day', $day)->increment('views');
+                if (! $n) \Illuminate\Support\Facades\DB::table('page_views')->insertOrIgnore(['organization_id' => $org->id, 'page_id' => $page->id, 'day' => $day, 'views' => 1]);
+            } catch (\Throwable $e) { /* Statistik darf die Seite nie stören */ }
+        }
+
         $others = $org->pages()->where('is_public', true)->whereNotIn('template', ['media', 'orders'])->get(['id', 'title', 'slug']);
 
         // Sprache: ?lang=en, sonst Browser-Sprache

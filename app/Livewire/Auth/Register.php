@@ -40,11 +40,11 @@ class Register extends Component
 
         // Bots: Honigtopf ausgefüllt oder Formular in unter 3 Sekunden abgeschickt
         if ($this->website !== '' || (time() - $this->startedAt) < 3) {
-            $this->addError('email', 'Die Registrierung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.');
+            $this->addError('email', __('Die Registrierung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.'));
             return;
         }
         if (RateLimiter::tooManyAttempts($key, 3)) {
-            $this->addError('email', 'Zu viele Registrierungen von dieser Verbindung. Bitte später erneut versuchen.');
+            $this->addError('email', __('Zu viele Registrierungen von dieser Verbindung. Bitte später erneut versuchen.'));
             return;
         }
 
@@ -57,16 +57,16 @@ class Register extends Component
             'password' => 'required|string|min:8|max:200',
             'terms' => 'accepted',
         ], [
-            'industry.required' => 'Bitte wählen Sie Ihre Branche.',
-            'company.required' => 'Bitte geben Sie den Namen Ihres Betriebs an.',
-            'name.required' => 'Bitte geben Sie Ihren Namen an.',
-            'email.unique' => 'Mit dieser E-Mail-Adresse gibt es bereits ein Konto.',
-            'password.min' => 'Das Passwort braucht mindestens 8 Zeichen.',
-            'terms.accepted' => 'Bitte stimmen Sie den AGB und der Datenschutzerklärung zu.',
+            'industry.required' => __('Bitte wählen Sie Ihre Branche.'),
+            'company.required' => __('Bitte geben Sie den Namen Ihres Betriebs an.'),
+            'name.required' => __('Bitte geben Sie Ihren Namen an.'),
+            'email.unique' => __('Mit dieser E-Mail-Adresse gibt es bereits ein Konto.'),
+            'password.min' => __('Das Passwort braucht mindestens 8 Zeichen.'),
+            'terms.accepted' => __('Bitte stimmen Sie den AGB und der Datenschutzerklärung zu.'),
         ]);
 
         if (Disposable::is($this->email)) {
-            $this->addError('email', 'Bitte verwenden Sie eine dauerhafte E-Mail-Adresse.');
+            $this->addError('email', __('Bitte verwenden Sie eine dauerhafte E-Mail-Adresse.'));
             return;
         }
 

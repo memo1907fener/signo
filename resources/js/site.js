@@ -282,8 +282,8 @@ window.signoDemo = function (initialText, extra) {
             try {
                 const r = await fetch('/demo/foto', { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': this.token() }, body: fd });
                 const j = await r.json().catch(() => ({}));
-                if (r.ok) this.show(j); else this.error = j.message || 'Das Foto konnte nicht gelesen werden.';
-            } catch (e) { this.error = 'Keine Verbindung.'; }
+                if (r.ok) this.show(j); else this.error = j.message || (window.SIGNO_T || {}).photo || '';
+            } catch (e) { this.error = (window.SIGNO_T || {}).offline || ''; }
             this.busy = false;
             ev.target.value = '';
         },
@@ -308,7 +308,7 @@ window.signoCalc = function (plans) {
             if (this.n === 0) return { key: 'qr', name: plans.qr.name, price: plans.qr.price, interval: 'year', features: plans.qr.features };
             if (this.n === 1) return { key: 'screen', name: plans.screen.name, price: plans.screen.price, interval: 'month', features: plans.screen.features };
             if (this.n <= 5) return { key: 'multi', name: plans.multi.name, price: plans.multi.price, interval: 'month', features: plans.multi.features };
-            return { key: 'custom', name: 'Viele Bildschirme', price: null, interval: 'month', features: ['Mehrere Standorte in einem Konto', 'Eigene Konditionen', 'Persönliche Einrichtung'] };
+            return { key: 'custom', name: (window.SIGNO_T || {}).customName, price: null, interval: 'month', features: (window.SIGNO_T || {}).customFeatures || [] };
         },
         euro(c) { return (c / 100).toLocaleString('de-AT', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' €'; },
         perScreen() { const p = this.plan; return p.price && this.n > 1 ? this.euro(Math.round(p.price / this.n)) : null; },

@@ -93,6 +93,7 @@ class PlayerController extends Controller
 
         $pages = ($screen->show_all ? $org->pages()->get() : $screen->pages()->where('organization_id', $org->id)->get())
             ->filter(fn (Page $p) => $p->isActiveAt())->values();
+        $pages->each(fn (Page $p) => $p->setRelation('organization', $org));
 
         // Jede Seite; bei "Sprachen abwechseln" zusätzlich jede Übersetzung als eigene Szene
         $out = collect();
@@ -119,7 +120,8 @@ class PlayerController extends Controller
             'seconds' => $screen->seconds,
             'name' => $screen->name,
             'pages' => $out,
-            'poll' => 30,
+            'notice' => $org->activeNotice(),
+            'poll' => $org->activeNotice() ? 15 : 30,
             'commands' => $commands,
         ]);
     }
@@ -169,6 +171,24 @@ class PlayerController extends Controller
     private function touch(Screen $screen, Request $request): void
     {
         $res = substr((string) $request->query('res', ''), 0, 20);
+
+        // Laufzeit für die Statistik: Zeit seit dem letzten Lebenszeichen, wenn der Bildschirm durchgehend da war
+        if ($screen->organization_id && $screen->last_seen_at) {
+            $gap = (int) abs(now()->diffInSeconds($screen->last_seen_at));
+            if ($gap > 0 && $gap <= 150) {
+                try {
+                    $day = now()->timezone(config('app.timezone'))->format('Y-m-d');
+                    $n = \Illuminate\Support\Facades\DB::table('screen_days')->where('screen_id', $screen->id)->where('day', $day)->increment('seconds', $gap);
+                    if (! $n) \Illuminate\Support\Facades\DB::table('screen_days')->insertOrIgnore(['screen_id' => $screen->id, 'day' => $day, 'seconds' => $gap]);
+                } catch (\Throwable $e) { /* Statistik darf den Bildschirm nie stören */ }
+            }
+        }
+
+        // War ein Ausfall gemeldet? Dann Entwarnung schicken.
+        if ($screen->offline_notified_at && $screen->organization_id) {
+            try { \App\Support\Alerts::backOnline($screen); } catch (\Throwable $e) { report($e); }
+        }
+
         $screen->forceFill([
             'last_seen_at' => now(),
             'ip' => $request->ip(),

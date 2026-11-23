@@ -50,9 +50,13 @@ class OrderController extends Controller
         $items = []; $total = 0;
         foreach ($v['items'] as $row) {
             $it = $page->data['sections'][$row['s']]['items'][$row['i']] ?? null;
-            $price = $it ? Order::parsePrice($it['price'] ?? '') : null;
+            // Aktionspreis gilt nur innerhalb der Happy Hour – der Server entscheidet
+            $price = $it ? Order::parsePrice($page->priceOf($it)[0]) : null;
             if (! $it || ! $price) {
                 return response()->json(['message' => 'Die Karte wurde gerade geändert. Bitte Seite neu laden.'], 409);
+            }
+            if (Page::soldOut($it)) {
+                return response()->json(['message' => '„' . $it['name'] . '“ ist heute leider ausverkauft. Bitte aus dem Warenkorb entfernen.'], 409);
             }
             $items[] = ['name' => $it['name'], 'qty' => (int) $row['q'], 'price' => $price];
             $total += $price * (int) $row['q'];

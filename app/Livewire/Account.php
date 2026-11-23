@@ -16,12 +16,22 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
 #[Title('Konto')]
 class Account extends Component
 {
-    use WithOrg;
+    use WithOrg, WithFileUploads;
+
+    // Marke
+    public $logo = null;
+    public string $brandAccent = '';
+    public bool $brandShowLogo = true;
+    public ?string $brandMessage = null;
+
+    // Sprache der Oberfläche
+    public string $locale = 'de';
 
     public string $company = '';
     public string $industry = '';
@@ -48,7 +58,10 @@ class Account extends Component
         $this->industry = $org->industry;
         $this->name = auth()->user()->name;
         $this->email = auth()->user()->email;
-        if (request('bezahlt')) session()->flash('ok', 'Danke! Ihr Paket ist aktiv. Die Bestätigung kommt per E-Mail.');
+        $this->brandAccent = (string) ($org->brand['accent'] ?? '');
+        $this->brandShowLogo = (bool) ($org->brand['show_logo'] ?? true);
+        $this->locale = app()->getLocale();
+        if (request('bezahlt')) session()->flash('ok', __('Danke! Ihr Paket ist aktiv. Die Bestätigung kommt per E-Mail.'));
     }
 
     protected function ownerOnly(): void
@@ -56,19 +69,97 @@ class Account extends Component
         abort_unless(auth()->user()->isOwnerOf($this->org()), 403);
     }
 
+    // ---------- Marke ----------
+    public function updatedLogo(): void
+    {
+        $this->ownerOnly();
+        $this->brandMessage = null;
+        $this->validate(['logo' => 'file|max:5120|mimes:png,jpg,jpeg,webp'], [
+            'logo.mimes' => __('Bitte ein Logo als PNG, JPG oder WEBP hochladen.'),
+            'logo.max' => __('Das Logo ist größer als 5 MB.'),
+        ]);
+        $org = $this->org();
+        $brand = $org->brand ?? [];
+        $colors = array_map([\App\Support\Brand::class, 'readable'], \App\Support\Brand::colors($this->logo->getRealPath()));
+
+        if (! empty($brand['logo'])) Storage::disk('public')->delete($brand['logo']);
+        $ext = strtolower($this->logo->getClientOriginalExtension() ?: $this->logo->extension());
+        $brand['logo'] = $this->logo->storeAs('org/' . $org->id, 'logo-' . Str::lower(Str::random(12)) . '.' . $ext, 'public');
+        $brand['colors'] = $colors;
+        if ($colors) $brand['accent'] = $colors[0];
+        $brand['show_logo'] = $this->brandShowLogo;
+        $org->update(['brand' => $brand]);
+
+        $this->brandAccent = (string) ($brand['accent'] ?? '');
+        $this->logo = null;
+        $this->brandMessage = $colors
+            ? __('Logo gespeichert. Die Farbe stammt aus Ihrem Logo – Sie können jederzeit eine andere wählen.')
+            : __('Logo gespeichert. Im Logo war keine kräftige Farbe zu finden – bitte eine eigene Farbe wählen.');
+    }
+
+    public function removeLogo(): void
+    {
+        $this->ownerOnly();
+        $org = $this->org();
+        $brand = $org->brand ?? [];
+        if (! empty($brand['logo'])) Storage::disk('public')->delete($brand['logo']);
+        unset($brand['logo']);
+        $brand['colors'] = [];
+        $org->update(['brand' => $brand]);
+    }
+
+    public function setBrandAccent(string $hex): void
+    {
+        $this->brandAccent = $hex;
+        $this->saveBrand();
+    }
+
+    public function saveBrand(): void
+    {
+        $this->ownerOnly();
+        $this->validate(['brandAccent' => ['nullable', 'regex:/^#[0-9a-fA-F]{6}$/']]);
+        $org = $this->org();
+        $brand = $org->brand ?? [];
+        $brand['accent'] = $this->brandAccent ? strtolower($this->brandAccent) : null;
+        $brand['show_logo'] = $this->brandShowLogo;
+        $org->update(['brand' => $brand]);
+        $this->brandMessage = __('Gespeichert.');
+    }
+
+    public function updatedBrandShowLogo(): void { $this->saveBrand(); }
+    public function updatedBrandAccent(): void { $this->saveBrand(); }
+
+    /** Markenfarbe auf alle vorhandenen Seiten anwenden. */
+    public function applyBrand(): void
+    {
+        $this->ownerOnly();
+        $org = $this->org();
+        if (! $org->brandAccent()) return;
+        $n = $org->pages()->update(['accent' => 'brand']);
+        $this->brandMessage = trans_choice('Die Markenfarbe gilt jetzt für :n Seite.|Die Markenfarbe gilt jetzt für alle :n Seiten.', $n, ['n' => $n]);
+    }
+
+    // ---------- Sprache ----------
+    public function updatedLocale()
+    {
+        if (! array_key_exists($this->locale, \App\Http\Middleware\SetLocale::LOCALES)) return;
+        auth()->user()->forceFill(['locale' => $this->locale])->save();
+        return $this->redirectRoute('account', navigate: false);
+    }
+
     // ---------- Team ----------
     public function invite(): void
     {
         $this->ownerOnly();
         $this->inviteEmail = strtolower(trim($this->inviteEmail));
-        $this->validate(['inviteEmail' => 'required|email|max:190', 'inviteRole' => 'required|in:owner,editor'], ['inviteEmail.required' => 'Bitte eine E-Mail-Adresse eingeben.']);
+        $this->validate(['inviteEmail' => 'required|email|max:190', 'inviteRole' => 'required|in:owner,editor'], ['inviteEmail.required' => __('Bitte eine E-Mail-Adresse eingeben.')]);
         $org = $this->org();
         if ($org->users()->where('email', $this->inviteEmail)->exists()) {
-            $this->addError('inviteEmail', 'Diese Person gehört bereits zum Team.');
+            $this->addError('inviteEmail', __('Diese Person gehört bereits zum Team.'));
             return;
         }
         if ($org->invitations()->whereNull('accepted_at')->count() >= 20) {
-            $this->addError('inviteEmail', 'Zu viele offene Einladungen.');
+            $this->addError('inviteEmail', __('Zu viele offene Einladungen.'));
             return;
         }
         $inv = Invitation::updateOrCreate(
@@ -124,10 +215,10 @@ class Account extends Component
     public function addLocation()
     {
         $this->ownerOnly();
-        $this->validate(['newLocation' => 'required|string|max:120'], ['newLocation.required' => 'Bitte einen Namen für den Standort eingeben.']);
+        $this->validate(['newLocation' => 'required|string|max:120'], ['newLocation.required' => __('Bitte einen Namen für den Standort eingeben.')]);
         $user = auth()->user();
         if ($user->organizations()->count() >= 25) {
-            $this->addError('newLocation', 'Maximal 25 Standorte pro Konto.');
+            $this->addError('newLocation', __('Maximal 25 Standorte pro Konto.'));
             return;
         }
         $current = $this->org();
@@ -164,9 +255,9 @@ class Account extends Component
 
     public function savePassword(): void
     {
-        $this->validate(['currentPassword' => 'required', 'newPassword' => 'required|min:8'], ['newPassword.min' => 'Mindestens 8 Zeichen.']);
+        $this->validate(['currentPassword' => 'required', 'newPassword' => 'required|min:8'], ['newPassword.min' => __('Mindestens 8 Zeichen.')]);
         if (! Hash::check($this->currentPassword, auth()->user()->password)) {
-            $this->addError('currentPassword', 'Das aktuelle Passwort stimmt nicht.');
+            $this->addError('currentPassword', __('Das aktuelle Passwort stimmt nicht.'));
             return;
         }
         auth()->user()->update(['password' => $this->newPassword]);
@@ -183,7 +274,7 @@ class Account extends Component
             return $this->redirect(Stripe::checkoutUrl($this->org(), $plan, auth()->user()->email));
         } catch (\Throwable $e) {
             report($e);
-            $this->billingError = 'Die Bezahlung konnte nicht gestartet werden. Bitte versuchen Sie es später erneut oder schreiben Sie uns.';
+            $this->billingError = __('Die Bezahlung konnte nicht gestartet werden. Bitte versuchen Sie es später erneut oder schreiben Sie uns.');
         }
     }
 
@@ -194,7 +285,7 @@ class Account extends Component
             return $this->redirect(Stripe::portalUrl($this->org()));
         } catch (\Throwable $e) {
             report($e);
-            $this->billingError = 'Das Kundenportal ist gerade nicht erreichbar.';
+            $this->billingError = __('Das Kundenportal ist gerade nicht erreichbar.');
         }
     }
 
@@ -202,7 +293,7 @@ class Account extends Component
     {
         $this->ownerOnly();
         if (! Hash::check($this->deletePassword, auth()->user()->password)) {
-            $this->addError('deletePassword', 'Passwort stimmt nicht.');
+            $this->addError('deletePassword', __('Passwort stimmt nicht.'));
             return;
         }
         $org = $this->org();
@@ -213,7 +304,7 @@ class Account extends Component
         $org->deleteCompletely();
 
         if (User::find($userId)) {
-            session()->flash('ok', 'Der Standort wurde gelöscht.');
+            session()->flash('ok', __('Der Standort wurde gelöscht.'));
             return $this->redirectRoute('pages.index', navigate: false);
         }
         Auth::logout();

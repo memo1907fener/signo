@@ -42,7 +42,60 @@ class Page extends Model
 
     public function accentColor(): string
     {
+        if ($this->accent === 'brand') return $this->organization?->brandAccent() ?? '#ff5a36';
         return config("signo.accents.{$this->accent}", '#ff5a36');
+    }
+
+    /** Hintergrund- und Schriftfarbe je Design und Helligkeit (eine Quelle für Bildschirm und Handy-Seite). */
+    public function colors(): array
+    {
+        $dark = $this->theme === 'dark';
+        return match ($this->font) {
+            'bistro' => $dark ? ['#1c1512', '#f4e9d8'] : ['#f6efe3', '#2a1d14'],
+            'chalk' => $dark ? ['#1f2a26', '#f3f1e7'] : ['#fbf7ee', '#3a3a38'],
+            'minimal' => $dark ? ['#0c0c0d', '#f4f4f2'] : ['#ffffff', '#141414'],
+            'neon' => $dark ? ['#0b0714', '#f4f0ff'] : ['#ffffff', '#14101f'],
+            default => $dark ? ['#111214', '#f5f2ec'] : ['#f7f4ef', '#17140f'],
+        };
+    }
+
+    /** Gilt gerade die Happy Hour dieser Liste? */
+    public function happyActive(?\Illuminate\Support\Carbon $at = null): bool
+    {
+        $h = $this->data['happy'] ?? null;
+        if ($this->template !== 'list' || ! $h || empty($h['enabled']) || empty($h['start']) || empty($h['end'])) return false;
+        $at = ($at ?? now())->copy()->timezone(config('app.timezone'));
+        $hm = $at->format('H:i');
+        $days = array_map('intval', $h['days'] ?? []) ?: [1, 2, 3, 4, 5, 6, 7];
+        if ($h['start'] < $h['end']) return in_array($at->dayOfWeekIso, $days, true) && $hm >= $h['start'] && $hm < $h['end'];
+        // über Mitternacht: der Tag zählt, an dem die Happy Hour begonnen hat
+        if ($hm >= $h['start']) return in_array($at->dayOfWeekIso, $days, true);
+        if ($hm < $h['end']) return in_array($at->copy()->subDay()->dayOfWeekIso, $days, true);
+        return false;
+    }
+
+    /** Ist der Eintrag heute als ausverkauft markiert? */
+    public static function soldOut(array $item): bool
+    {
+        return ($item['soldout'] ?? '') === now()->timezone(config('app.timezone'))->format('Y-m-d');
+    }
+
+    /** Aktuell gültiger Preis eines Eintrags: [Preis, durchgestrichener Normalpreis oder null]. */
+    public function priceOf(array $item): array
+    {
+        $happy = trim((string) ($item['happy'] ?? ''));
+        if ($happy !== '' && $this->happyActive()) return [$happy, $item['price'] ?? ''];
+        return [$item['price'] ?? '', null];
+    }
+
+    /** Alle auf der Seite verwendeten Kennzeichen (für die Legende). */
+    public function usedTags(): array
+    {
+        $d = $this->data ?? [];
+        $groups = $this->template === 'week' ? ($d['days'] ?? []) : ($d['sections'] ?? []);
+        $used = [];
+        foreach ($groups as $g) foreach (($g['items'] ?? []) as $it) foreach (($it['tags'] ?? []) as $t) $used[$t] = true;
+        return \App\Support\PageData::tags(array_keys($used));
     }
 
     public function templateLabel(): string
@@ -125,6 +178,8 @@ class Page extends Model
     /** Prüfsumme für den Player: ändert sich bei jeder Bearbeitung. */
     public function revision(): string
     {
-        return substr(md5($this->id . '|' . $this->updated_at?->timestamp . '|' . json_encode($this->data) . json_encode($this->translations) . (int) $this->tv_languages . $this->theme . $this->accent . $this->font), 0, 12);
+        // Datum, Happy Hour und Marke fließen ein: Wochenmenü, "ausverkauft" und Aktionspreise wechseln von selbst
+        $dynamic = now()->timezone(config('app.timezone'))->format('Ymd') . (int) $this->happyActive() . md5(json_encode($this->organization?->brand));
+        return substr(md5($this->id . '|' . $this->updated_at?->timestamp . '|' . json_encode($this->data) . json_encode($this->translations) . (int) $this->tv_languages . $this->theme . $this->accent . $this->font . $dynamic), 0, 12);
     }
 }

@@ -19,7 +19,7 @@ class DemoController extends Controller
             'text' => 'nullable|string|max:3000',
             'theme' => 'nullable|in:light,dark',
             'accent' => 'nullable|string|max:20',
-            'font' => 'nullable|in:modern,elegant',
+            'font' => 'nullable|string|max:20',
         ]);
         $data = self::parse((string) ($v['text'] ?? ''));
         return response()->json($this->output('list', $data, $v));
@@ -55,7 +55,7 @@ class DemoController extends Controller
             'template' => $template,
             'theme' => ($v['theme'] ?? 'dark') === 'light' ? 'light' : 'dark',
             'accent' => array_key_exists($v['accent'] ?? '', config('signo.accents')) ? $v['accent'] : 'gold',
-            'font' => ($v['font'] ?? 'elegant') === 'modern' ? 'modern' : 'elegant',
+            'font' => array_key_exists($v['font'] ?? '', config('signo.fonts')) ? $v['font'] : 'elegant',
             'data' => PageData::clean($template, $data),
             'slug' => 'demo',
         ]);

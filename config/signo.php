@@ -38,6 +38,7 @@ return [
         'media' => ['label' => 'Bild oder Video',    'hint' => 'Plakat, Foto, Werbespot'],
         'clock' => ['label' => 'Uhr & Wetter',       'hint' => 'Große Uhr, Datum und Wetter vor Ort'],
         'countdown' => ['label' => 'Countdown',      'hint' => 'Eröffnung, Silvester, Aktionsende'],
+        'week'  => ['label' => 'Wochenmenü',         'hint' => 'Mittagsmenü Montag bis Freitag, zeigt automatisch den richtigen Tag'],
         'orders' => ['label' => 'Abholanzeige',      'hint' => 'Bestellnummern für Gäste', 'hidden' => true],
     ],
 
@@ -51,10 +52,34 @@ return [
         'rose'   => '#e0457b',
     ],
 
+    // Designs (in der Datenbank weiterhin im Feld "font")
     'fonts' => [
         'modern'  => 'Modern',
         'elegant' => 'Elegant',
+        'bistro'  => 'Bistro',
+        'chalk'   => 'Kreidetafel',
+        'minimal' => 'Minimal',
+        'neon'    => 'Neon',
     ],
+
+    // Die 14 kennzeichnungspflichtigen Allergene (Buchstaben nach österreichischer Empfehlung)
+    'allergens' => [
+        'A' => 'Gluten', 'B' => 'Krebstiere', 'C' => 'Ei', 'D' => 'Fisch', 'E' => 'Erdnuss', 'F' => 'Soja', 'G' => 'Milch',
+        'H' => 'Schalenfrüchte', 'L' => 'Sellerie', 'M' => 'Senf', 'N' => 'Sesam', 'O' => 'Sulfite', 'P' => 'Lupinen', 'R' => 'Weichtiere',
+    ],
+
+    // Zusätzliche Kennzeichen je Eintrag
+    'marks' => [
+        'vegan' => ['label' => 'Vegan', 'icon' => '🌱'],
+        'veg'   => ['label' => 'Vegetarisch', 'icon' => '🥕'],
+        'hot'   => ['label' => 'Scharf', 'icon' => '🌶️'],
+        'halal' => ['label' => 'Halal', 'icon' => '☪️'],
+        'bio'   => ['label' => 'Bio', 'icon' => '🍃'],
+        'new'   => ['label' => 'Neu', 'icon' => '⭐'],
+    ],
+
+    // Minuten ohne Lebenszeichen, bis der Ausfall-Alarm verschickt wird
+    'offline_minutes' => (int) env('SIGNO_OFFLINE_MINUTES', 15),
 
     // Pakete – Preise in Cent; Stripe-Preis-IDs aus der .env
     'plans' => [
@@ -63,14 +88,14 @@ return [
             'price' => 2900, 'interval' => 'year',
             'screens' => 0,
             'stripe_price' => env('STRIPE_PRICE_QR'),
-            'features' => ['Alle Vorlagen hell & dunkel', 'KI-Import aus Foto oder PDF', 'QR-Code & Handy-Seite', 'Automatisch in 16 Sprachen', 'Bestellen per Handy mit Küchenansicht', 'Ändern per Sprache'],
+            'features' => ['Alle Vorlagen hell & dunkel', 'KI-Import aus Foto oder PDF', 'QR-Code & Handy-Seite', 'Automatisch in 16 Sprachen', 'Allergene, Ausverkauft & Happy Hour', 'Bestellen per Handy mit Küchenansicht', 'Feedback & Stempelkarte', 'Statistik'],
         ],
         'screen' => [
             'name' => 'Bildschirm',
             'price' => 1900, 'interval' => 'month',
             'screens' => 1,
             'stripe_price' => env('STRIPE_PRICE_SCREEN'),
-            'features' => ['Alles aus QR & Web', '1 Bildschirm', 'Abholanzeige für Bestellungen', 'Betriebszeiten & Fernsteuerung', 'Offline-Wiedergabe'],
+            'features' => ['Alles aus QR & Web', '1 Bildschirm', 'Wochenmenü & Eilmeldung am Bildschirm', 'Abholanzeige für Bestellungen', 'Betriebszeiten & Ausfall-Alarm', 'Offline-Wiedergabe'],
         ],
         'multi' => [
             'name' => 'Mehrere Bildschirme',

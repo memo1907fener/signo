@@ -296,6 +296,7 @@ body.site { margin: 0; color: var(--milk); font-family: var(--display); font-siz
 .seg { display: inline-flex; padding: 4px; border-radius: 999px; background: rgba(7, 8, 24, .6); box-shadow: inset 0 0 0 1px var(--hair); }
 .seg button { border: 0; background: transparent; padding: .55em 1.05em; border-radius: 999px; font: 600 .88rem var(--display); color: var(--haze); cursor: pointer; transition: background .25s, color .25s; }
 .seg button[aria-pressed="true"] { background: var(--milk); color: var(--night); }
+.seg-wrap { flex-wrap: wrap; border-radius: 22px; }
 .dots { display: flex; gap: 9px; }
 .dots button { width: 26px; height: 26px; border-radius: 50%; border: 0; cursor: pointer; box-shadow: 0 0 0 2px var(--night), 0 0 0 3px transparent; transition: transform .2s var(--ease), box-shadow .2s; }
 .dots button:hover { transform: scale(1.15); }
@@ -429,6 +430,17 @@ body.site { margin: 0; color: var(--milk); font-family: var(--display); font-siz
 .foot .wrap { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-between; align-items: center; }
 .foot a { text-decoration: none; margin-left: 22px; }
 .foot a:hover { text-decoration: underline; }
+.foot .langs a { margin-left: 14px; opacity: .7; }
+.foot .langs a[aria-current] { opacity: 1; text-decoration: underline; text-underline-offset: 4px; }
+
+/* ---------- Weitere Funktionen (ruhige Liste unter dem Raster) ---------- */
+.more-head { margin: clamp(56px, 9vh, 96px) 0 0; font-family: var(--serif); font-style: italic; font-weight: 400; font-size: clamp(1.7rem, 3.2vw, 2.5rem); line-height: 1.1; color: var(--amber); }
+.more { margin-top: 26px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 40px; border-top: 1px solid var(--hair); }
+.more-item { padding: 22px 0 24px; border-bottom: 1px solid var(--hair); }
+.more-item h4 { margin: 0; font-size: 1.08rem; font-weight: 700; letter-spacing: -0.01em; color: var(--milk); }
+.more-item p { margin: 6px 0 0; font-size: .95rem; line-height: 1.5; color: var(--haze); max-width: 34ch; }
+@media (max-width: 900px) { .more { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; } }
+@media (max-width: 560px) { .more { grid-template-columns: 1fr; } }
 
 /* Beim Einpassen der Schrift stehen die Bühnen kurz gerade (gleicher Frame, unsichtbar) */
 .sg-measuring .screen3d, .sg-measuring .s-tv, .sg-measuring .hero-stage { transform: none !important; }

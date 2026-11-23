@@ -48,6 +48,13 @@ class Translations
                 $add("sections.$s.items.$i.description");
             }
         }
+        foreach (($d['days'] ?? []) as $n => $day) {
+            foreach (($day['items'] ?? []) as $i => $_) {
+                $add("days.$n.items.$i.name");
+                $add("days.$n.items.$i.description");
+            }
+        }
+        $add('happy.label');
         foreach (($d['rows'] ?? []) as $r => $_) {
             $add("rows.$r.label");
             $add("rows.$r.value");

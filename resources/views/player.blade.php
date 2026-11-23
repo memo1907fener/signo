@@ -24,6 +24,14 @@
         #code { margin-top: 2.5vh; font-size: 17vh; font-weight: 800; letter-spacing: .12em; font-variant-numeric: tabular-nums; color: #fff; line-height: 1; }
         #overlay p { margin-top: 4vh; font-size: 2.6vh; color: #a39d93; max-width: 70vw; line-height: 1.5; }
         #overlay p strong { color: #fff; }
+        #notice { position: fixed; left: 0; right: 0; top: 0; z-index: 40; display: none; align-items: center; justify-content: center; gap: 2.4vh; text-align: center;
+            padding: 2.6vh 5vw; background: #e5343a; color: #fff; font: 800 4.6vh/1.15 "Inter Variable", system-ui, sans-serif; letter-spacing: -.01em; box-shadow: 0 1vh 4vh rgba(0,0,0,.45); }
+        #notice.on { display: flex; animation: notice-in .6s cubic-bezier(.2,.8,.2,1); }
+        #notice.full { bottom: 0; font-size: 9vh; padding: 8vh 8vw; flex-direction: column; }
+        #notice::before { content: ""; flex: none; width: 2.2vh; height: 2.2vh; border-radius: 50%; background: #fff; animation: notice-dot 1.4s ease-in-out infinite; }
+        #notice.full::before { width: 4vh; height: 4vh; }
+        @keyframes notice-in { from { transform: translateY(-100%); } to { transform: none; } }
+        @keyframes notice-dot { 50% { opacity: .25; } }
         #sleep { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 60; background: #000; display: none; cursor: none; }
         #status { position: fixed; right: 1.2vh; bottom: 1vh; z-index: 70; font: 1.4vh system-ui, sans-serif; color: rgba(255,255,255,.55); background: rgba(0,0,0,.35); padding: .3vh 1vh; border-radius: 1vh; display: none; }
     </style>
@@ -39,6 +47,7 @@
     <div id="code"></div>
     <p id="ov-text"></p>
 </div>
+<div id="notice" role="alert"></div>
 <div id="sleep"></div>
 <div id="status"></div>
 
@@ -148,6 +157,24 @@
         else sceneTimer = setTimeout(function () { lastTick = Date.now(); next(); }, 60000);
     }
 
+    // Eilmeldung des Betriebs: liegt über allen Seiten, bis sie beendet wird oder abläuft
+    var noticeUntil = null;
+    function notice(n) {
+        var el = $('notice');
+        var before = stage.style.top;
+        if (!n || !n.text) { el.className = ''; el.textContent = ''; noticeUntil = null; stage.style.top = '0px'; }
+        else {
+            noticeUntil = n.until ? new Date(n.until).getTime() : null;
+            if (el.textContent !== n.text) el.textContent = n.text;
+            var cls = 'on' + (n.full ? ' full' : '');
+            if (el.className !== cls) el.className = cls;
+            // Leiste schiebt die Seite nach unten, damit nichts verdeckt wird
+            stage.style.top = n.full ? '0px' : el.offsetHeight + 'px';
+        }
+        if (stage.style.top !== before) fit(stage);
+    }
+    setInterval(function () { if (noticeUntil && Date.now() > noticeUntil) notice(null); }, 5000);
+
     function apply(data) {
         if (data.status !== 'active') return;
         if (data.revision === currentRevision && scenes.length) return;
@@ -210,6 +237,7 @@
                     failCount = 0; unknownCount = 0; status('');
                     pollEvery = Math.max(5, data.poll || 30) * 1000;
                     handleCommands(data.commands);
+                    notice(data.status === 'active' ? data.notice : null);
 
                     if (data.status === 'pairing') {
                         sleep(false); clearTimeout(sceneTimer); stage.innerHTML = ''; scenes = []; currentRevision = null;

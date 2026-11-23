@@ -93,7 +93,7 @@ class Edit extends Component
         $page = $this->page();
         $this->title = mb_substr(trim($this->title), 0, 80) ?: 'Ohne Titel';
         if (! in_array($this->theme, ['light', 'dark'], true)) $this->theme = 'light';
-        if (! array_key_exists($this->accent, config('signo.accents'))) $this->accent = 'coral';
+        if (! array_key_exists($this->accent, config('signo.accents')) && ! ($this->accent === 'brand' && $this->org()->brandAccent())) $this->accent = 'coral';
         if (! array_key_exists($this->font, config('signo.fonts'))) $this->font = 'modern';
         $page->update([
             'title' => $this->title,
@@ -134,7 +134,7 @@ class Edit extends Component
             $this->ideas = Creative::ideas($this->org(), $this->page()->template, $this->idea);
         } catch (\Throwable $e) {
             report($e);
-            $this->ideaError = $e instanceof \RuntimeException ? $e->getMessage() : 'Das hat nicht geklappt.';
+            $this->ideaError = $e instanceof \RuntimeException ? $e->getMessage() : __('Das hat nicht geklappt.');
         }
     }
 
@@ -162,10 +162,10 @@ class Edit extends Component
         $this->photoError = null;
         try {
             $this->photos = Creative::searchPhotos($this->photoQuery);
-            if (! $this->photos) $this->photoError = 'Keine Fotos gefunden. Andere Suchbegriffe probieren (Englisch funktioniert oft besser).';
+            if (! $this->photos) $this->photoError = __('Keine Fotos gefunden. Andere Suchbegriffe probieren (Englisch funktioniert oft besser).');
         } catch (\Throwable $e) {
             report($e);
-            $this->photoError = $e instanceof \RuntimeException ? $e->getMessage() : 'Die Bildsuche ist gerade nicht erreichbar.';
+            $this->photoError = $e instanceof \RuntimeException ? $e->getMessage() : __('Die Bildsuche ist gerade nicht erreichbar.');
         }
     }
 
@@ -177,7 +177,7 @@ class Edit extends Component
             $path = Creative::importPhoto($this->org(), $p['full']);
         } catch (\Throwable $e) {
             report($e);
-            $this->photoError = $e instanceof \RuntimeException ? $e->getMessage() : 'Das Foto konnte nicht geladen werden.';
+            $this->photoError = $e instanceof \RuntimeException ? $e->getMessage() : __('Das Foto konnte nicht geladen werden.');
             return;
         }
         $key = $this->page()->template === 'media' ? 'file' : 'image';
@@ -199,7 +199,7 @@ class Edit extends Component
         if (count($this->languages) > 6) {
             array_pop($this->languages);
             $this->langError = true;
-            $this->langMessage = 'Höchstens 6 Sprachen je Seite.';
+            $this->langMessage = __('Höchstens 6 Sprachen je Seite.');
             return;
         }
         $this->page()->update(['languages' => $this->languages]);
@@ -212,11 +212,11 @@ class Edit extends Component
         $page = $this->page();
         try {
             Translations::translate($this->org(), $page);
-            $this->langMessage = $this->languages ? 'Übersetzung aktuell.' : null;
+            $this->langMessage = $this->languages ? __('Übersetzung aktuell.') : null;
         } catch (\Throwable $e) {
             report($e);
             $this->langError = true;
-            $this->langMessage = $e instanceof \RuntimeException ? $e->getMessage() : 'Übersetzung fehlgeschlagen.';
+            $this->langMessage = $e instanceof \RuntimeException ? $e->getMessage() : __('Übersetzung fehlgeschlagen.');
         }
     }
 
@@ -229,7 +229,7 @@ class Edit extends Component
             $this->voicePreview = $r;
         } catch (\Throwable $e) {
             report($e);
-            $this->voiceError = $e instanceof \RuntimeException ? $e->getMessage() : 'Das hat nicht geklappt. Bitte erneut versuchen.';
+            $this->voiceError = $e instanceof \RuntimeException ? $e->getMessage() : __('Das hat nicht geklappt. Bitte erneut versuchen.');
         }
     }
 
@@ -246,6 +246,55 @@ class Edit extends Component
     public function voiceDiscard(): void
     {
         $this->voicePreview = null;
+    }
+
+    // ---------- Kennzeichen, Ausverkauft, Wochenmenü ----------
+    private function itemPath(string $path): string
+    {
+        abort_unless(preg_match('/^(sections|days)\.\d{1,2}\.items\.\d{1,2}$/', $path) === 1, 400);
+        return $path;
+    }
+
+    public function toggleTag(string $path, string $tag): void
+    {
+        $path = $this->itemPath($path);
+        if (data_get($this->data, $path) === null) return;
+        $tags = (array) data_get($this->data, "$path.tags", []);
+        $tags = in_array($tag, $tags, true) ? array_diff($tags, [$tag]) : array_merge($tags, [$tag]);
+        data_set($this->data, "$path.tags", PageData::tags($tags));
+        $this->persist();
+    }
+
+    /** "Heute aus": gilt bis Tagesende und verschwindet danach von selbst. */
+    public function toggleSoldOut(string $path): void
+    {
+        $path = $this->itemPath($path);
+        $item = data_get($this->data, $path);
+        if (! is_array($item)) return;
+        data_set($this->data, "$path.soldout", Page::soldOut($item) ? '' : now()->timezone(config('app.timezone'))->format('Y-m-d'));
+        $this->persist();
+    }
+
+    public function addDayItem(int $day): void
+    {
+        if ($day < 0 || $day > 6) return;
+        $this->data['days'][$day]['items'][] = ['name' => '', 'description' => '', 'price' => '', 'tags' => [], 'soldout' => '', 'happy' => ''];
+        $this->persist();
+    }
+
+    public function removeDayItem(int $day, int $i): void
+    {
+        unset($this->data['days'][$day]['items'][$i]);
+        $this->data['days'][$day]['items'] = array_values($this->data['days'][$day]['items'] ?? []);
+        $this->persist();
+    }
+
+    /** Einen Tag auf einen anderen kopieren (z. B. Montag → Dienstag). */
+    public function copyDay(int $from, int $to): void
+    {
+        if ($from < 0 || $from > 6 || $to < 0 || $to > 6 || $from === $to) return;
+        $this->data['days'][$to]['items'] = $this->data['days'][$from]['items'] ?? [];
+        $this->persist();
     }
 
     // ---------- Listen ----------
@@ -318,8 +367,8 @@ class Edit extends Component
                 ? 'file|max:102400|mimes:jpg,jpeg,png,webp,gif,mp4,webm'
                 : 'file|max:15360|mimes:jpg,jpeg,png,webp',
         ], [
-            'image.mimes' => $isMedia ? 'Erlaubt: JPG, PNG, WEBP, GIF, MP4, WEBM.' : 'Erlaubt: JPG, PNG, WEBP.',
-            'image.max' => $isMedia ? 'Maximal 100 MB.' : 'Maximal 15 MB.',
+            'image.mimes' => $isMedia ? __('Erlaubt: JPG, PNG, WEBP, GIF, MP4, WEBM.') : __('Erlaubt: JPG, PNG, WEBP.'),
+            'image.max' => $isMedia ? __('Maximal 100 MB.') : __('Maximal 15 MB.'),
         ]);
 
         $ext = strtolower($this->image->getClientOriginalExtension() ?: $this->image->extension());

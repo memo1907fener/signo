@@ -16,6 +16,10 @@
     if ($org && ($org->ordering_enabled || $org->industry === 'gastro')) {
         array_splice($nav, 2, 0, [['route' => 'orders', 'match' => 'orders', 'label' => 'Bestellungen']]);
     }
+    array_splice($nav, count($nav) - 1, 0, [
+        ['route' => 'guests', 'match' => 'guests', 'label' => 'Gäste'],
+        ['route' => 'stats', 'match' => 'stats', 'label' => 'Statistik'],
+    ]);
     if ($user?->is_admin) $nav[] = ['route' => 'admin', 'match' => 'admin*', 'label' => 'Admin'];
 @endphp
 
@@ -32,7 +36,7 @@
                             <button class="block w-full px-4 py-2 text-left hover:bg-paper {{ $l->id === $org->id ? 'font-semibold' : '' }}">{{ $l->name }}</button>
                         </form>
                     @endforeach
-                    <a href="{{ route('account') }}" class="block border-t border-black/5 px-4 py-2 text-muted hover:bg-paper">Standorte verwalten</a>
+                    <a href="{{ route('account') }}" class="block border-t border-black/5 px-4 py-2 text-muted hover:bg-paper">{{ __('Standorte verwalten') }}</a>
                 </div>
             </div>
         @endif
@@ -40,13 +44,13 @@
             @foreach ($nav as $n)
                 <a href="{{ route($n['route']) }}" wire:navigate
                    class="whitespace-nowrap rounded-full px-3.5 py-1.5 text-sm font-medium transition {{ request()->routeIs($n['match']) ? 'bg-ink text-white' : 'text-ink/70 hover:bg-black/5 hover:text-ink' }}">
-                    {{ $n['label'] }}
+                    {{ __($n['label']) }}
                 </a>
             @endforeach
         </nav>
         <form method="POST" action="{{ route('logout') }}" class="hidden sm:block">
             @csrf
-            <button class="text-sm text-muted hover:text-ink">Abmelden</button>
+            <button class="text-sm text-muted hover:text-ink">{{ __('Abmelden') }}</button>
         </form>
     </div>
 </header>
@@ -54,15 +58,15 @@
 @if ($org && $org->onTrial())
     <div class="bg-ink text-white">
         <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm sm:px-6">
-            <span>Testphase: noch <strong>{{ $org->trialDaysLeft() }} {{ $org->trialDaysLeft() === 1 ? 'Tag' : 'Tage' }}</strong> kostenlos.</span>
-            @if ($user->isOwnerOf($org))<a href="{{ route('account') }}#paket" wire:navigate class="font-semibold text-brand hover:underline">Paket wählen →</a>@endif
+            <span>{!! trans_choice('Testphase: noch <strong>:n Tag</strong> kostenlos.|Testphase: noch <strong>:n Tage</strong> kostenlos.', $org->trialDaysLeft(), ['n' => $org->trialDaysLeft()]) !!}</span>
+            @if ($user->isOwnerOf($org))<a href="{{ route('account') }}#paket" wire:navigate class="font-semibold text-brand hover:underline">{{ __('Paket wählen →') }}</a>@endif
         </div>
     </div>
 @elseif ($org && ! $org->isActive())
     <div class="bg-brand text-white">
         <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm sm:px-6">
-            <span>Ihre Testphase ist abgelaufen – Bildschirme und QR-Seiten sind pausiert.</span>
-            <a href="{{ route('account') }}#paket" wire:navigate class="font-semibold underline">Jetzt Paket wählen</a>
+            <span>{{ __('Ihre Testphase ist abgelaufen – Bildschirme und QR-Seiten sind pausiert.') }}</span>
+            <a href="{{ route('account') }}#paket" wire:navigate class="font-semibold underline">{{ __('Jetzt Paket wählen') }}</a>
         </div>
     </div>
 @endif
@@ -76,7 +80,7 @@
 
 <form method="POST" action="{{ route('logout') }}" class="pb-10 text-center sm:hidden">
     @csrf
-    <button class="text-sm text-muted">Abmelden</button>
+    <button class="text-sm text-muted">{{ __('Abmelden') }}</button>
 </form>
 
 @livewireScripts

@@ -14,7 +14,7 @@ export function signoFit(root) {
             const kx = r.width / box.offsetWidth || 1, ky = r.height / box.offsetHeight || 1;
             const bottom = r.bottom - parseFloat(cs.paddingBottom) * ky + 1;
             const right = r.right - parseFloat(cs.paddingRight) * kx + 1;
-            const els = box.querySelectorAll('.sg-head, .sg-section, .sg-item, .sg-foot, .sg-split-text > *, .sg-row, .sg-price');
+            const els = box.querySelectorAll('.sg-head, .sg-section, .sg-day, .sg-item, .sg-foot, .sg-split-text > *, .sg-row, .sg-price');
             for (const el of els) {
                 const e = el.getBoundingClientRect();
                 if (e.height && (e.bottom > bottom || e.right > right)) return true;
@@ -22,7 +22,7 @@ export function signoFit(root) {
             return box.scrollHeight > box.clientHeight + 1 || box.scrollWidth > box.clientWidth + 1;
         };
         // Wenig Inhalt: Schrift bis 40 % größer; viel Inhalt: kleiner, bis alles passt
-        const max = page.classList.contains('sg-t-list') ? 1.4 : 1.15;
+        const max = page.classList.contains('sg-t-list') || page.classList.contains('sg-t-week') ? 1.4 : 1.15;
         page.style.setProperty('--fit', String(max));
         if (!overflows()) return;
         let lo = 0.35, hi = max;

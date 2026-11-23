@@ -15,6 +15,9 @@ Artisan::command('signo:cleanup', function () {
         ->delete();
     $c = ScreenCommand::where('created_at', '<', now()->subDays(7))->delete();
     $o = \App\Models\Order::where('created_at', '<', now()->subDays(90))->delete();
+    \Illuminate\Support\Facades\DB::table('page_views')->where('day', '<', now()->subDays(400)->format('Y-m-d'))->delete();
+    \Illuminate\Support\Facades\DB::table('screen_days')->where('day', '<', now()->subDays(400)->format('Y-m-d'))->delete();
+    \App\Models\StampCard::where('updated_at', '<', now()->subDays(540))->delete();
     $this->info("$n ungekoppelte Bildschirme, $c alte Befehle und $o alte Bestellungen entfernt.");
 })->purpose('Alte, nie gekoppelte Bildschirme entfernen');
 
@@ -47,5 +50,11 @@ Artisan::command('signo:trial-reminders', function () {
     $this->info("$sent Erinnerungen versendet.");
 })->purpose('Erinnerungs-Mails zur Testphase');
 
+// Ausfall-Alarm für Bildschirme
+Artisan::command('signo:offline-alerts', function () {
+    $this->info(\App\Support\Alerts::checkOffline() . ' Ausfälle gemeldet.');
+})->purpose('E-Mail, wenn ein Bildschirm während der Betriebszeit offline ist');
+
+Schedule::command('signo:offline-alerts')->everyFiveMinutes();
 Schedule::command('signo:cleanup')->dailyAt('04:10');
 Schedule::command('signo:trial-reminders')->hourly();

@@ -9,11 +9,11 @@
     @if (! $k)
         <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
-                <h1 class="text-3xl font-bold tracking-tight">Bestellungen</h1>
-                <p class="mt-1 text-muted">Gäste bestellen per QR-Code am Handy – die Bestellung erscheint hier und in der Küche.</p>
+                <h1 class="text-3xl font-bold tracking-tight">{{ __('Bestellungen') }}</h1>
+                <p class="mt-1 text-muted">{{ __('Gäste bestellen per QR-Code am Handy – die Bestellung erscheint hier und in der Küche.') }}</p>
             </div>
             @if ($org->ordering_enabled)
-                <div class="text-right text-sm text-muted">Heute: <strong class="text-ink">{{ $todayCount }}</strong> Bestellungen · <strong class="text-ink">{{ \App\Models\Order::euro($today) }}</strong></div>
+                <div class="text-right text-sm text-muted">{{ __('Heute') }}: <strong class="text-ink">{{ $todayCount }}</strong> {{ __('Bestellungen') }} · <strong class="text-ink">{{ \App\Models\Order::euro($today) }}</strong></div>
             @endif
         </div>
 
@@ -26,59 +26,59 @@
                         <span class="h-7 w-12 rounded-full bg-black/15 transition peer-checked:bg-green-600"></span>
                         <span class="absolute left-1 h-5 w-5 rounded-full bg-white shadow transition peer-checked:translate-x-5"></span>
                     </span>
-                    <span class="font-semibold">{{ $enabled ? 'Bestellen ist eingeschaltet' : 'Bestellen per Handy einschalten' }}</span>
+                    <span class="font-semibold">{{ __($enabled ? 'Bestellen ist eingeschaltet' : 'Bestellen per Handy einschalten') }}</span>
                 </label>
-                <button @click="open = !open" class="text-sm text-muted hover:text-ink" x-text="open ? 'Einstellungen ausblenden' : 'Einstellungen'"></button>
+                <button @click="open = !open" class="text-sm text-muted hover:text-ink" x-text="open ? @js(__('Einstellungen ausblenden')) : @js(__('Einstellungen'))"></button>
             </div>
 
             <div x-show="open" x-cloak class="mt-6 grid gap-6 md:grid-cols-2">
                 <div>
-                    <span class="label">Wie wird bestellt?</span>
+                    <span class="label">{{ __('Wie wird bestellt?') }}</span>
                     <div class="inline-flex rounded-full bg-sand p-1 text-sm font-medium">
-                        <button wire:click="$set('mode', 'pickup')" class="rounded-full px-4 py-1.5 {{ $mode === 'pickup' ? 'bg-white shadow-sm' : 'text-muted' }}">Zum Abholen (Name)</button>
-                        <button wire:click="$set('mode', 'table')" class="rounded-full px-4 py-1.5 {{ $mode === 'table' ? 'bg-white shadow-sm' : 'text-muted' }}">Am Tisch (Tischnummer)</button>
+                        <button wire:click="$set('mode', 'pickup')" class="rounded-full px-4 py-1.5 {{ $mode === 'pickup' ? 'bg-white shadow-sm' : 'text-muted' }}">{{ __('Zum Abholen (Name)') }}</button>
+                        <button wire:click="$set('mode', 'table')" class="rounded-full px-4 py-1.5 {{ $mode === 'table' ? 'bg-white shadow-sm' : 'text-muted' }}">{{ __('Am Tisch (Tischnummer)') }}</button>
                     </div>
-                    <label class="label mt-5" for="onote">Hinweis für Gäste</label>
-                    <input id="onote" wire:model="note" wire:blur="saveSettings" class="input" placeholder="z. B. Bezahlung an der Kassa">
-                    <p class="hint">Bezahlt wird wie gewohnt vor Ort. @if ($saved) <span class="text-green-700">Gespeichert.</span> @endif</p>
+                    <label class="label mt-5" for="onote">{{ __('Hinweis für Gäste') }}</label>
+                    <input id="onote" wire:model="note" wire:blur="saveSettings" class="input" placeholder="{{ __('z. B. Bezahlung an der Kassa') }}">
+                    <p class="hint">{{ __('Bezahlt wird wie gewohnt vor Ort.') }} @if ($saved) <span class="text-green-700">{{ __('Gespeichert.') }}</span> @endif</p>
 
-                    <p class="label mt-5">Bestellbare Seiten</p>
+                    <p class="label mt-5">{{ __('Bestellbare Seiten') }}</p>
                     @forelse ($orderPages as $p)
                         <a href="{{ route('pages.edit', $p) }}" wire:navigate class="mr-2 inline-block rounded-full bg-paper px-3 py-1 text-sm ring-1 ring-black/10">{{ $p->title }}</a>
                     @empty
-                        <p class="text-sm text-muted">Noch keine. In einer Liste mit Preisen „Per Handy bestellbar“ einschalten.</p>
+                        <p class="text-sm text-muted">{{ __('Noch keine. In einer Liste mit Preisen „Per Handy bestellbar“ einschalten.') }}</p>
                     @endforelse
                 </div>
 
                 @if ($org->kitchen_token)
                     <div class="space-y-5">
                         <div>
-                            <p class="label">Küchenbildschirm (Tablet in der Küche)</p>
+                            <p class="label">{{ __('Küchenbildschirm (Tablet in der Küche)') }}</p>
                             <div class="flex gap-2">
                                 <input readonly value="{{ $kitchenUrl }}" class="input text-xs" onclick="this.select()">
-                                <a href="{{ $kitchenUrl }}" target="_blank" class="btn-ghost btn-sm shrink-0">Öffnen</a>
+                                <a href="{{ $kitchenUrl }}" target="_blank" class="btn-ghost btn-sm shrink-0">{{ __('Öffnen') }}</a>
                             </div>
-                            <p class="hint">Ohne Anmeldung nutzbar – den Link nicht weitergeben. <button wire:click="newToken" wire:confirm="Neuen Link erzeugen? Der alte Küchen- und Abhol-Link funktioniert dann nicht mehr." class="underline">Neuen Link erzeugen</button></p>
+                            <p class="hint">{{ __('Ohne Anmeldung nutzbar – den Link nicht weitergeben.') }} <button wire:click="newToken" wire:confirm="{{ __('Neuen Link erzeugen? Der alte Küchen- und Abhol-Link funktioniert dann nicht mehr.') }}" class="underline">{{ __('Neuen Link erzeugen') }}</button></p>
                         </div>
                         <div>
-                            <p class="label">Abholanzeige für Gäste</p>
+                            <p class="label">{{ __('Abholanzeige für Gäste') }}</p>
                             @if ($hasBoard)
-                                <p class="text-sm text-muted">Die Seite „Abholanzeige“ ist angelegt – unter Bildschirme auswählen.</p>
+                                <p class="text-sm text-muted">{{ __('Die Seite „Abholanzeige“ ist angelegt – unter Bildschirme auswählen.') }}</p>
                             @else
-                                <button wire:click="createBoardPage" class="btn-ghost btn-sm">Als Seite für einen Bildschirm anlegen</button>
+                                <button wire:click="createBoardPage" class="btn-ghost btn-sm">{{ __('Als Seite für einen Bildschirm anlegen') }}</button>
                             @endif
-                            <a href="{{ $boardUrl }}" target="_blank" class="ml-2 text-sm underline">Vorschau</a>
+                            <a href="{{ $boardUrl }}" target="_blank" class="ml-2 text-sm underline">{{ __('Vorschau') }}</a>
                         </div>
                         @if ($mode === 'table')
                             <div x-data="{ t: '' }">
-                                <p class="label">QR-Code für einen Tisch</p>
+                                <p class="label">{{ __('QR-Code für einen Tisch') }}</p>
                                 <div class="flex gap-2">
-                                    <input x-model="t" class="input w-28" placeholder="Tisch-Nr.">
+                                    <input x-model="t" class="input w-28" placeholder="{{ __('Tisch-Nr.') }}">
                                     @if ($orderPages->first())
-                                        <button class="btn-primary btn-sm" @click="t && signoQrDownload('{{ $orderPages->first()->publicUrl() }}?tisch=' + encodeURIComponent(t), 'tisch-' + t)">QR herunterladen</button>
+                                        <button class="btn-primary btn-sm" @click="t && signoQrDownload('{{ $orderPages->first()->publicUrl() }}?tisch=' + encodeURIComponent(t), 'tisch-' + t)">{{ __('QR herunterladen') }}</button>
                                     @endif
                                 </div>
-                                <p class="hint">Die Tischnummer ist beim Bestellen dann schon ausgefüllt.</p>
+                                <p class="hint">{{ __('Die Tischnummer ist beim Bestellen dann schon ausgefüllt.') }}</p>
                             </div>
                         @endif
                     </div>
@@ -105,7 +105,7 @@
                     <section>
                         <h2 class="mb-3 flex items-center gap-2 font-semibold {{ $k ? 'text-white/80' : '' }}">
                             <span class="h-2.5 w-2.5 rounded-full {{ ['new' => 'bg-brand', 'preparing' => 'bg-amber-400', 'ready' => 'bg-green-500'][$st] }}"></span>
-                            {{ $label }} <span class="{{ $muted }}">({{ $columns[$st]->count() }})</span>
+                            {{ __($label) }} <span class="{{ $muted }}">({{ $columns[$st]->count() }})</span>
                         </h2>
                         <div class="space-y-3">
                             @forelse ($columns[$st] as $o)
@@ -115,7 +115,7 @@
                                             <p class="text-2xl font-extrabold">#{{ $o->number }}</p>
                                             <p class="text-sm {{ $muted }}">
                                                 {{ $o->created_at->format('H:i') }}
-                                                @if ($o->table_no) · <strong class="{{ $k ? 'text-white' : 'text-ink' }}">Tisch {{ $o->table_no }}</strong> @endif
+                                                @if ($o->table_no) · <strong class="{{ $k ? 'text-white' : 'text-ink' }}">{{ __('Tisch') }} {{ $o->table_no }}</strong> @endif
                                                 @if ($o->customer_name) · {{ $o->customer_name }} @endif
                                             </p>
                                         </div>
@@ -131,17 +131,17 @@
                                     @endif
                                     <div class="mt-4 flex flex-wrap gap-2">
                                         @if ($st === 'new')
-                                            <button wire:click="setStatus({{ $o->id }}, 'preparing')" class="btn-brand btn-sm">Annehmen</button>
-                                            <button wire:click="setStatus({{ $o->id }}, 'canceled')" wire:confirm="Bestellung #{{ $o->number }} stornieren?" class="btn btn-sm {{ $k ? 'bg-white/10 text-white' : 'btn-ghost' }}">Stornieren</button>
+                                            <button wire:click="setStatus({{ $o->id }}, 'preparing')" class="btn-brand btn-sm">{{ __('Annehmen') }}</button>
+                                            <button wire:click="setStatus({{ $o->id }}, 'canceled')" wire:confirm="{{ __('Bestellung #:n stornieren?', ['n' => $o->number]) }}" class="btn btn-sm {{ $k ? 'bg-white/10 text-white' : 'btn-ghost' }}">{{ __('Stornieren') }}</button>
                                         @elseif ($st === 'preparing')
-                                            <button wire:click="setStatus({{ $o->id }}, 'ready')" class="btn btn-sm bg-green-600 text-white hover:bg-green-700">Fertig</button>
+                                            <button wire:click="setStatus({{ $o->id }}, 'ready')" class="btn btn-sm bg-green-600 text-white hover:bg-green-700">{{ __('Fertig') }}</button>
                                         @else
-                                            <button wire:click="setStatus({{ $o->id }}, 'done')" class="btn btn-sm {{ $k ? 'bg-white/10 text-white' : 'btn-ghost' }}">Abgeholt</button>
+                                            <button wire:click="setStatus({{ $o->id }}, 'done')" class="btn btn-sm {{ $k ? 'bg-white/10 text-white' : 'btn-ghost' }}">{{ __('Abgeholt') }}</button>
                                         @endif
                                     </div>
                                 </div>
                             @empty
-                                <p class="rounded-3xl border border-dashed px-4 py-8 text-center text-sm {{ $k ? 'border-white/15 text-white/40' : 'border-black/10 text-muted' }}">Keine</p>
+                                <p class="rounded-3xl border border-dashed px-4 py-8 text-center text-sm {{ $k ? 'border-white/15 text-white/40' : 'border-black/10 text-muted' }}">{{ __('Keine') }}</p>
                             @endforelse
                         </div>
                     </section>
@@ -153,7 +153,7 @@
                     <summary class="cursor-pointer text-sm text-muted">Erledigt heute ({{ $done->count() }})</summary>
                     <div class="mt-3 space-y-1 text-sm">
                         @foreach ($done as $o)
-                            <p class="text-muted">#{{ $o->number }} · {{ $o->created_at->format('H:i') }} · {{ \App\Models\Order::STATUS[$o->status] }} · {{ \App\Models\Order::euro($o->total_cents) }}</p>
+                            <p class="text-muted">#{{ $o->number }} · {{ $o->created_at->format('H:i') }} · {{ __(\App\Models\Order::STATUS[$o->status]) }} · {{ \App\Models\Order::euro($o->total_cents) }}</p>
                         @endforeach
                     </div>
                 </details>

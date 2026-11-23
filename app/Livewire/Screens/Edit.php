@@ -57,8 +57,8 @@ class Edit extends Component
             'onTime' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
             'offTime' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
         ], [
-            'name.required' => 'Bitte einen Namen eingeben.',
-            'seconds.min' => 'Mindestens 4 Sekunden.',
+            'name.required' => __('Bitte einen Namen eingeben.'),
+            'seconds.min' => __('Mindestens 4 Sekunden.'),
         ]);
 
         $screen = $this->screen();
@@ -108,9 +108,9 @@ class Edit extends Component
         $screen->commands()->whereNull('acked_at')->where('command', $cmd)->delete();
         $screen->commands()->create(['command' => $cmd, 'expires_at' => now()->addMinutes(10)]);
         $this->flash = match ($cmd) {
-            'reload' => 'Der Bildschirm lädt in den nächsten Sekunden neu.',
-            'restart_app' => 'Die App wird neu gestartet (nur Android-App).',
-            'screenshot' => 'Bildschirmfoto angefordert – erscheint in ca. 30 Sekunden.',
+            'reload' => __('Der Bildschirm lädt in den nächsten Sekunden neu.'),
+            'restart_app' => __('Die App wird neu gestartet (nur Android-App).'),
+            'screenshot' => __('Bildschirmfoto angefordert – erscheint in ca. 30 Sekunden.'),
         };
     }
 
@@ -120,7 +120,7 @@ class Edit extends Component
         $screen->pages()->detach();
         $screen->commands()->delete();
         $screen->delete();
-        session()->flash('ok', 'Bildschirm entfernt. Am Gerät erscheint wieder ein neuer Code.');
+        session()->flash('ok', __('Bildschirm entfernt. Am Gerät erscheint wieder ein neuer Code.'));
         return $this->redirectRoute('screens.index', navigate: true);
     }
 

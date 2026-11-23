@@ -38,7 +38,7 @@
         <p><strong>Bildschirme:</strong> Gerätekennung, IP-Adresse, Bildschirmauflösung und Zeitpunkt der letzten Verbindung, um den Betrieb zu überwachen und Störungen zu erkennen.</p>
         <p><strong>Server-Protokolle:</strong> IP-Adresse, Zeitpunkt und aufgerufene Adresse werden kurzfristig zur Abwehr von Missbrauch gespeichert (Art. 6 Abs. 1 lit. f DSGVO).</p>
         <h2>Cookies</h2>
-        <p>Wir verwenden ausschließlich technisch notwendige Cookies (Sitzung und Schutz vor Formular-Missbrauch). Es gibt keine Werbe-, Analyse- oder Tracking-Cookies. Schriftarten werden von unserem eigenen Server geladen.</p>
+        <p>Wir verwenden ausschließlich technisch notwendige Cookies (Sitzung, gewählte Sprache und Schutz vor Formular-Missbrauch). Nutzt ein Gast die digitale Stempelkarte eines Betriebs, speichert ein weiteres notwendiges Cookie die Nummer seiner Karte, damit sie beim nächsten Besuch wieder erscheint. Es gibt keine Werbe-, Analyse- oder Tracking-Cookies. Schriftarten werden von unserem eigenen Server geladen.</p>
         <h2>Auftragsverarbeiter</h2>
         <p><strong>Hosting:</strong> Unsere Server werden von einem Hosting-Dienstleister betrieben, mit dem ein Auftragsverarbeitungsvertrag besteht.</p>
         <p><strong>Zahlungen:</strong> Stripe Payments Europe Ltd., Dublin, Irland. Zahlungsdaten werden direkt bei Stripe eingegeben und nicht auf unseren Servern gespeichert.</p>
@@ -46,6 +46,8 @@
         <p><strong>Übersetzungen und „Schnell ändern“:</strong> Wenn Sie Seiten übersetzen lassen oder Änderungen per Text/Sprache beauftragen, werden die Texte der Seite an Anthropic PBC (USA) übermittelt. Bei der Spracheingabe wandelt Ihr Browser die Sprache in Text um (je nach Browser über Google oder Apple); Signo erhält nur den Text.</p>
         <h2>Bestellungen von Gästen</h2>
         <p>Bestellt ein Gast über die Handy-Seite eines Betriebs, verarbeiten wir die Bestellung (Gerichte, angegebener Name oder Tischnummer, Anmerkung, IP-Adresse zum Schutz vor Missbrauch) im Auftrag dieses Betriebs. Verantwortlich ist der jeweilige Betrieb. Bestellungen werden nach 90 Tagen gelöscht.</p>
+        <h2>Feedback, Stempelkarte und Statistik</h2>
+        <p>Gibt ein Gast über die Feedback-Seite eines Betriebs eine Bewertung ab, verarbeiten wir die Sterne, den Text, freiwillig angegebene Kontaktdaten und die IP-Adresse (Schutz vor Missbrauch) im Auftrag dieses Betriebs. Die digitale Stempelkarte kommt ohne Namen aus: Gespeichert werden nur eine zufällige Kartennummer, die Anzahl der Stempel und der Zeitpunkt des letzten Stempels; Karten ohne Nutzung löschen wir nach 18 Monaten. Für die Statistik zählen wir je Seite und Tag, wie oft sie aufgerufen wurde – ohne Cookies, ohne IP-Adressen und ohne Bezug zu einzelnen Personen. Verantwortlich ist jeweils der Betrieb.</p>
         <p><strong>E-Mail-Versand:</strong> Systemnachrichten (z. B. Passwort zurücksetzen) werden über unseren E-Mail-Anbieter versendet.</p>
         <h2>Speicherdauer</h2>
         <p>Wir speichern Ihre Daten, solange Ihr Konto besteht. Wenn Sie Ihr Konto löschen, werden Inhalte, Bilder und Bildschirme sofort gelöscht. Rechnungsdaten bewahren wir gemäß den gesetzlichen Aufbewahrungsfristen (7 Jahre) auf.</p>

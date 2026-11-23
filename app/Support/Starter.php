@@ -58,6 +58,14 @@ class Starter
                 'fit' => 'cover',
                 'caption' => '',
             ],
+            'week' => [
+                'heading' => 'Mittagsmenü',
+                'subheading' => '',
+                'price' => '',
+                'view' => 'today',
+                'days' => array_map(fn () => ['items' => []], range(0, 6)),
+                'footer' => '',
+            ],
             default => [],
         };
     }

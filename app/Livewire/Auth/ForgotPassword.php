@@ -20,7 +20,7 @@ class ForgotPassword extends Component
         $this->validate(['email' => 'required|email']);
         $key = 'forgot:' . request()->ip();
         if (RateLimiter::tooManyAttempts($key, 5)) {
-            $this->addError('email', 'Zu viele Anfragen. Bitte später erneut versuchen.');
+            $this->addError('email', __('Zu viele Anfragen. Bitte später erneut versuchen.'));
             return;
         }
         RateLimiter::hit($key, 3600);

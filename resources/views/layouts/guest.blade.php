@@ -11,9 +11,9 @@
             {{ $slot }}
         </div>
         <p class="mt-10 text-xs text-muted">
-            <a href="{{ route('legal', 'impressum') }}" class="hover:text-ink">Impressum</a> ·
-            <a href="{{ route('legal', 'datenschutz') }}" class="hover:text-ink">Datenschutz</a> ·
-            <a href="{{ route('legal', 'agb') }}" class="hover:text-ink">AGB</a>
+            <a href="{{ route('legal', 'impressum') }}" class="hover:text-ink">{{ __('Impressum') }}</a> ·
+            <a href="{{ route('legal', 'datenschutz') }}" class="hover:text-ink">{{ __('Datenschutz') }}</a> ·
+            <a href="{{ route('legal', 'agb') }}" class="hover:text-ink">{{ __('AGB') }}</a>
         </p>
     </div>
     @livewireScripts

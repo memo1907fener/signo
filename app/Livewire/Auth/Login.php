@@ -28,7 +28,7 @@ class Login extends Component
         }
         if (! Auth::attempt(['email' => Str::lower(trim($this->email)), 'password' => $this->password], $this->remember)) {
             RateLimiter::hit($key, 300);
-            $this->addError('email', 'E-Mail-Adresse oder Passwort stimmen nicht.');
+            $this->addError('email', __('E-Mail-Adresse oder Passwort stimmen nicht.'));
             return;
         }
         RateLimiter::clear($key);

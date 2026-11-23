@@ -1,5 +1,6 @@
 @php
     $dark = $page->theme === 'dark';
+    [$bg, $fg] = $page->colors();
     $t = \App\Support\Ui::mobile($lang);
 @endphp
 <!DOCTYPE html>
@@ -8,20 +9,20 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>{{ $page->title }} · {{ $org->name }}</title>
-    <meta name="theme-color" content="{{ $dark ? '#111214' : '#f7f4ef' }}">
+    <meta name="theme-color" content="{{ $bg }}">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     @vite(['resources/css/player.css'])
     <style>
-        html, body { background: {{ $dark ? '#111214' : '#f7f4ef' }}; overflow: auto; cursor: auto; height: auto; }
-        body { font-family: "Inter Variable", system-ui, sans-serif; color: {{ $dark ? '#f5f2ec' : '#17140f' }}; }
-        .sg-bar { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(10px); background: {{ $dark ? 'rgba(17,18,20,.88)' : 'rgba(247,244,239,.88)' }}; }
+        html, body { background: {{ $bg }}; overflow: auto; cursor: auto; height: auto; }
+        body { font-family: "Inter Variable", system-ui, sans-serif; color: {{ $fg }}; }
+        .sg-bar { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(10px); background: color-mix(in srgb, {{ $bg }} 88%, transparent); }
         .sg-nav { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px 6px; }
         .sg-nav a, .sg-langs a { white-space: nowrap; font-size: 14px; font-weight: 600; padding: 7px 14px; border-radius: 99px; text-decoration: none;
             color: inherit; border: 1px solid {{ $dark ? 'rgba(255,255,255,.18)' : 'rgba(0,0,0,.12)' }}; }
         .sg-nav a.on { background: {{ $page->accentColor() }}; border-color: transparent; color: #fff; }
         .sg-langs { display: flex; gap: 6px; overflow-x: auto; padding: 6px 16px 10px; }
         .sg-langs a { font-size: 12px; padding: 4px 10px; }
-        .sg-langs a.on { background: {{ $dark ? '#f5f2ec' : '#17140f' }}; color: {{ $dark ? '#17140f' : '#fff' }}; border-color: transparent; }
+        .sg-langs a.on { background: {{ $fg }}; color: {{ $bg }}; border-color: transparent; }
         .sg-org { text-align: center; padding: 18px 16px 0; font: 600 13px "Inter Variable", system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: {{ $dark ? '#a39d93' : '#6e675d' }}; }
         .sg-made { text-align: center; padding: 0 0 110px; font-size: 12px; }
         .sg-made a { color: {{ $dark ? '#6f6a63' : '#9a9388' }}; text-decoration: none; }
@@ -42,6 +43,17 @@
         .go:disabled { opacity: .5; }
         .err { color: #e5484d; font-size: 14px; margin-top: 10px; }
         .muted { opacity: .6; font-size: 13px; }
+        .sg-notice { background: #e5343a; color: #fff; font-weight: 700; text-align: center; padding: 12px 16px; font-size: 15px; }
+        .sg-org img { max-height: 54px; max-width: 200px; object-fit: contain; }
+        .sg-filter { max-width: 760px; margin: 0 auto; padding: 14px 22px 0; }
+        .sg-filter summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; padding: 7px 14px; border-radius: 99px; border: 1px solid color-mix(in srgb, {{ $fg }} 18%, transparent); }
+        .sg-filter summary::-webkit-details-marker { display: none; }
+        .sg-filter .grp { margin-top: 12px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; opacity: .6; }
+        .sg-filter .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .sg-filter button { font: 600 13px "Inter Variable", system-ui; padding: 6px 12px; border-radius: 99px; cursor: pointer; background: transparent; color: inherit; border: 1px solid color-mix(in srgb, {{ $fg }} 18%, transparent); }
+        .sg-filter button.on { background: {{ $page->accentColor() }}; border-color: transparent; color: #fff; }
+        .sg-guest { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 0 22px 26px; }
+        .sg-guest a { font-size: 14px; font-weight: 600; padding: 10px 18px; border-radius: 99px; text-decoration: none; color: inherit; border: 1px solid color-mix(in srgb, {{ $fg }} 18%, transparent); }
         [x-cloak] { display: none !important; }
     </style>
 </head>
@@ -66,8 +78,62 @@
         </div>
     @endif
 
-    <div class="sg-org">{{ $org->name }}</div>
+    @if ($notice = $org->activeNotice())
+        <div class="sg-notice" role="alert">{{ $notice['text'] }}</div>
+    @endif
+    <div class="sg-org">@if ($org->showsLogo())<img src="{{ $org->logoUrl() }}" alt="{{ $org->name }}">@else{{ $org->name }}@endif</div>
+
+    @php
+        $used = $page->usedTags();
+        $labels = \App\Support\Ui::tagLabels($lang);
+        $usedMarks = array_values(array_filter($used, fn ($x) => strlen($x) > 1 && $x !== 'new'));
+        $usedLetters = array_values(array_filter($used, fn ($x) => strlen($x) === 1));
+    @endphp
+    @if ($usedMarks || $usedLetters)
+        <details class="sg-filter" id="sgFilter">
+            <summary>⚙︎ {{ $t['filter'] }} <span id="sgFilterCount"></span></summary>
+            @if ($usedMarks)
+                <div class="grp">{{ $t['only'] }}</div>
+                <div class="chips">@foreach ($usedMarks as $m)<button type="button" data-only="{{ $m }}">{{ config("signo.marks.$m.icon") }} {{ $labels[$m] }}</button>@endforeach</div>
+            @endif
+            @if ($usedLetters)
+                <div class="grp">{{ $t['without'] }}</div>
+                <div class="chips">@foreach ($usedLetters as $a)<button type="button" data-without="{{ $a }}">{{ $labels[$a] }}</button>@endforeach</div>
+            @endif
+        </details>
+        <script>
+            (function () {
+                var box = document.getElementById('sgFilter'), only = [], without = [];
+                function run() {
+                    document.querySelectorAll('.sg-item[data-tags]').forEach(function (el) {
+                        var tags = el.dataset.tags ? el.dataset.tags.split(' ') : [];
+                        // "vegetarisch" schließt vegane Gerichte ein
+                        var okOnly = only.every(function (o) { return tags.indexOf(o) >= 0 || (o === 'veg' && tags.indexOf('vegan') >= 0); });
+                        var okWithout = without.every(function (w) { return tags.indexOf(w) < 0; });
+                        el.classList.toggle('sg-filtered', !(okOnly && okWithout));
+                    });
+                    var n = only.length + without.length;
+                    document.getElementById('sgFilterCount').textContent = n ? '(' + n + ')' : '';
+                }
+                box.addEventListener('click', function (e) {
+                    var b = e.target.closest('button'); if (!b) return;
+                    var list = b.dataset.only ? only : without, v = b.dataset.only || b.dataset.without, i = list.indexOf(v);
+                    if (i >= 0) list.splice(i, 1); else list.push(v);
+                    b.classList.toggle('on', i < 0);
+                    run();
+                });
+            })();
+        </script>
+    @endif
+
     @include('display.page', ['page' => $page, 'mode' => 'mobile', 'ordering' => $ordering])
+
+    @if ($org->feedback_enabled || $org->loyaltyOn())
+        <div class="sg-guest">
+            @if ($org->loyaltyOn())<a href="{{ $org->stampUrl() }}">🎟️ {{ $t['stamps'] }}</a>@endif
+            @if ($org->feedback_enabled)<a href="{{ $org->feedbackUrl() }}{{ $lang !== 'de' ? '?lang=' . $lang : '' }}">⭐ {{ $t['feedback'] }}</a>@endif
+        </div>
+    @endif
     <div class="sg-made"><a href="{{ url('/') }}">Erstellt mit Signo</a></div>
 
     @if ($ordering)

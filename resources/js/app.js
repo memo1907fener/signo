@@ -16,6 +16,37 @@ window.signoQrDownload = function (url, name) {
     });
 };
 
+// ---------- Export: Seite als Bild speichern oder drucken ----------
+async function renderPng(id, scale) {
+    const node = document.getElementById(id);
+    if (!node) throw new Error('missing');
+    const { toPng } = await import('html-to-image');
+    if (document.fonts && document.fonts.ready) await document.fonts.ready;
+    const opts = { width: node.offsetWidth, height: node.offsetHeight, pixelRatio: scale || 1, cacheBust: true };
+    await toPng(node, opts);            // erster Durchlauf lädt Schriften und Bilder (Safari)
+    return toPng(node, opts);
+}
+window.signoExport = async function (id, name, scale) {
+    const data = await renderPng(id, scale);
+    const a = document.createElement('a');
+    a.href = data; a.download = name + '.png';
+    document.body.appendChild(a); a.click(); a.remove();
+};
+window.signoPrint = async function (id, size, scale) {
+    const data = await renderPng(id, scale);
+    const frame = document.createElement('iframe');
+    frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+    document.body.appendChild(frame);
+    const doc = frame.contentDocument;
+    doc.open();
+    doc.write('<!doctype html><html><head><style>@page{size:' + size + ';margin:0}html,body{margin:0;height:100%}img{display:block;width:100%;height:100%;object-fit:contain}</style></head><body><img src="' + data + '"></body></html>');
+    doc.close();
+    await new Promise((ok) => { const img = doc.querySelector('img'); if (img.complete) ok(); else img.onload = ok; });
+    frame.contentWindow.focus();
+    frame.contentWindow.print();
+    setTimeout(() => frame.remove(), 60000);
+};
+
 function refresh() { drawQr(document); if (window.signoFit) window.signoFit(document); }
 document.addEventListener('DOMContentLoaded', refresh);
 document.addEventListener('livewire:navigated', refresh);
